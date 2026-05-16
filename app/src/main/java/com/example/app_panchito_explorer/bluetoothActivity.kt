@@ -133,6 +133,8 @@ class bluetoothActivity : AppCompatActivity() {
 
         dispositivosBLE = ArrayList()
 
+        mostrarDispositivoConectado()
+
         // =========================
         // ADAPTADOR BLUETOOTH
         // =========================
@@ -266,6 +268,8 @@ class bluetoothActivity : AppCompatActivity() {
 
                 listBluetooth.adapter = null
 
+                mostrarDispositivoConectado()
+
                 // INICIAR ESCANEO
 
                 bluetoothLeScanner?.startScan(leScanCallback)
@@ -319,20 +323,43 @@ class bluetoothActivity : AppCompatActivity() {
 
                 bluetoothLeScanner?.stopScan(leScanCallback)
 
-                val device = dispositivosBLE[position]
+                val itemSeleccionado =
+                    dispositivos.getOrNull(position)
+
+                if (
+                    BluetoothManager.conectado &&
+                    itemSeleccionado == obtenerInfoDispositivoConectado()
+                ) {
+
+                    abrirDispositivoConectado(itemSeleccionado)
+
+                    return@setOnItemClickListener
+                }
+
+                val posicionBle =
+                    obtenerPosicionBle(position)
+
+                if (
+                    posicionBle < 0 ||
+                    posicionBle >= dispositivosBLE.size
+                ) {
+
+                    Toast.makeText(
+                        this,
+                        "Dispositivo no disponible",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    return@setOnItemClickListener
+                }
+
+                val device = dispositivosBLE[posicionBle]
 
                 val nombre =
                     device.name ?: "Dispositivo BLE"
 
                 val direccion =
                     device.address
-
-                // =========================
-                // GUARDAR NOMBRE
-                // =========================
-
-                BluetoothManager.nombreDispositivo =
-                    nombre
 
                 val info =
                     "$nombre\n$direccion"
@@ -348,6 +375,17 @@ class bluetoothActivity : AppCompatActivity() {
                 // =========================
 
                 BluetoothManager.cerrarConexion()
+
+                // =========================
+                // GUARDAR NOMBRE
+                // =========================
+
+                BluetoothManager.nombreDispositivo =
+                    nombre
+
+                BluetoothManager.direccionDispositivo =
+                    direccion
+
                 dispositivoPendiente = info
 
                 // =========================
@@ -374,12 +412,32 @@ class bluetoothActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+
+        super.onResume()
+
+        if (::listBluetooth.isInitialized) {
+
+            mostrarDispositivoConectado()
+        }
+    }
+
     private fun abrirDispositivoConectado() {
 
         val info =
             dispositivoPendiente ?: return
 
         dispositivoPendiente = null
+
+        abrirDispositivoConectado(info)
+    }
+
+    private fun abrirDispositivoConectado(info: String?) {
+
+        if (info == null) {
+
+            return
+        }
 
         val intent =
             Intent(
@@ -393,6 +451,59 @@ class bluetoothActivity : AppCompatActivity() {
         )
 
         startActivity(intent)
+    }
+
+    private fun mostrarDispositivoConectado() {
+
+        val info =
+            obtenerInfoDispositivoConectado() ?: return
+
+        if (!dispositivos.contains(info)) {
+
+            dispositivos.add(info)
+
+            listBluetooth.adapter =
+                DispositivoAdapter(
+                    this,
+                    dispositivos
+                )
+        }
+    }
+
+    private fun obtenerInfoDispositivoConectado(): String? {
+
+        if (!BluetoothManager.conectado) {
+
+            return null
+        }
+
+        val nombre =
+            BluetoothManager.nombreDispositivo
+                ?: return null
+
+        val direccion =
+            BluetoothManager.direccionDispositivo
+                ?: "Conectado"
+
+        return "$nombre\n$direccion"
+    }
+
+    private fun obtenerPosicionBle(position: Int): Int {
+
+        val conectado =
+            obtenerInfoDispositivoConectado()
+
+        return if (
+            conectado != null &&
+            dispositivos.firstOrNull() == conectado
+        ) {
+
+            position - 1
+
+        } else {
+
+            position
+        }
     }
 
     // =========================

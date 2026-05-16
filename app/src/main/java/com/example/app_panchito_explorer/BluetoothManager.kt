@@ -11,6 +11,9 @@ object BluetoothManager {
     // Nombre dispositivo
     var nombreDispositivo: String? = null
 
+    // Direccion dispositivo
+    var direccionDispositivo: String? = null
+
     // GATT global
     var bluetoothGatt: BluetoothGatt? = null
 
@@ -33,6 +36,8 @@ object BluetoothManager {
         }
 
         conectado = false
+        nombreDispositivo = null
+        direccionDispositivo = null
         bluetoothGatt = null
         characteristicTX = null
         bateria = 0
