@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import kotlin.math.max
+import kotlin.math.sqrt
 
 class mapeoRealActivity : AppCompatActivity() {
 
@@ -33,7 +34,10 @@ class mapeoRealActivity : AppCompatActivity() {
     private var obstaculosGrandes = 0
     private var puertasDetectadas = 0
 
+    private var mapeoActivo = false
     private var modoManual = true
+    private var modoAuto = false
+    private var mostrarMedidasMuros = true
     private var heading = 0
     private var posX = 0.0
     private var posY = 0.0
@@ -49,6 +53,7 @@ class mapeoRealActivity : AppCompatActivity() {
     private lateinit var tvGrandes: TextView
     private lateinit var mapaPreview: MapaPreviewView
     private val botonesActivos = arrayListOf<View>()
+    private var botonMovimientoActivo: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +71,7 @@ class mapeoRealActivity : AppCompatActivity() {
         val btnStopModo = findViewById<LinearLayout>(R.id.btnStopModo)
         val btnMedirModo = findViewById<LinearLayout>(R.id.btnMedirModo)
         val btnAutoModo = findViewById<LinearLayout>(R.id.btnAutoModo)
+        val btnVolverOrigen = findViewById<LinearLayout>(R.id.btnVolverOrigen)
 
         tvOeste = findViewById(R.id.tvOeste)
         tvNorte = findViewById(R.id.tvNorte)
@@ -85,68 +91,89 @@ class mapeoRealActivity : AppCompatActivity() {
                 btnIniciarSesion,
                 btnStopModo,
                 btnMedirModo,
-                btnAutoModo
+                btnAutoModo,
+                btnVolverOrigen
             )
         )
 
-        BluetoothManager.enviarDato("I")
-        marcarBotonActivo(btnIniciarSesion)
+        actualizarEstadosBotones()
         actualizarUI()
 
         btnIniciarSesion.setOnClickListener {
+            mapeoActivo = !mapeoActivo
             marcarBotonActivo(btnIniciarSesion)
             modoManual = true
-            reiniciarMapa()
-            enviarComando("I")
+            modoAuto = false
+
+            if (mapeoActivo && rutaManual.isEmpty()) {
+                reiniciarMapa()
+                enviarComando("I")
+            }
+
+            actualizarEstadosBotones()
         }
 
         btnMedirModo.setOnClickListener {
-            marcarBotonActivo(btnMedirModo)
-            modoManual = false
-            enviarComando("M")
+            mostrarMedidasMuros = !mostrarMedidasMuros
+            actualizarUI()
+            actualizarEstadosBotones()
         }
 
         btnAutoModo.setOnClickListener {
-            marcarBotonActivo(btnAutoModo)
+            modoAuto = true
             modoManual = false
             enviarComando("A")
+            botonMovimientoActivo = btnAutoModo
+            actualizarEstadosBotones()
         }
 
         btnUp.setOnClickListener {
-            marcarBotonActivo(btnUp)
+            botonMovimientoActivo = btnUp
             modoManual = true
+            modoAuto = false
             enviarComando("F")
             registrarPasoManual(0.18)
+            actualizarEstadosBotones()
         }
 
         btnDown.setOnClickListener {
-            marcarBotonActivo(btnDown)
+            botonMovimientoActivo = btnDown
             modoManual = true
+            modoAuto = false
             enviarComando("B")
+            actualizarEstadosBotones()
         }
 
         btnLeft.setOnClickListener {
-            marcarBotonActivo(btnLeft)
+            botonMovimientoActivo = btnLeft
             modoManual = true
+            modoAuto = false
             heading = (heading + 270) % 360
             enviarComando("L")
+            actualizarEstadosBotones()
         }
 
         btnRight.setOnClickListener {
-            marcarBotonActivo(btnRight)
+            botonMovimientoActivo = btnRight
             modoManual = true
+            modoAuto = false
             heading = (heading + 90) % 360
             enviarComando("R")
+            actualizarEstadosBotones()
         }
 
         btnStop.setOnClickListener {
-            marcarBotonActivo(btnStop)
+            pausarMapeo(btnStop)
             enviarComando("S")
         }
 
         btnStopModo.setOnClickListener {
-            marcarBotonActivo(btnStopModo)
+            pausarMapeo(btnStopModo)
             enviarComando("S")
+        }
+
+        btnVolverOrigen.setOnClickListener {
+            volverAlPuntoOrigen(btnVolverOrigen)
         }
 
         btnGuardar.setOnClickListener {
@@ -187,7 +214,7 @@ class mapeoRealActivity : AppCompatActivity() {
     }
 
     private fun registrarPasoManual(distancia: Double) {
-        if (!modoManual) {
+        if (!mapeoActivo || !modoManual) {
             return
         }
 
@@ -237,6 +264,53 @@ class mapeoRealActivity : AppCompatActivity() {
         actualizarUI()
     }
 
+    private fun volverAlPuntoOrigen(botonOrigen: View) {
+        val puntoCercano =
+            obtenerPuntoMasCercanoAlOrigen()
+
+        if (puntoCercano == null) {
+            Toast.makeText(
+                this,
+                "Aun no hay ruta guardada para volver",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            return
+        }
+
+        mapeoActivo = false
+        modoAuto = false
+        botonMovimientoActivo = botonOrigen
+        actualizarEstadosBotones()
+        enviarComando("O")
+
+        Toast.makeText(
+            this,
+            "Volviendo al punto recordado mas cercano al inicio",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+    private fun obtenerPuntoMasCercanoAlOrigen(): RutaPunto? {
+        return rutaManual
+            .mapNotNull { punto ->
+                val partes = punto.split(",")
+                if (partes.size < 4) {
+                    null
+                } else {
+                    RutaPunto(
+                        orden = partes[0].toIntOrNull() ?: 0,
+                        x = partes[1].toDoubleOrNull() ?: 0.0,
+                        y = partes[2].toDoubleOrNull() ?: 0.0,
+                        modo = partes[3]
+                    )
+                }
+            }
+            .minByOrNull { punto ->
+                sqrt((punto.x * punto.x) + (punto.y * punto.y))
+            }
+    }
+
     private fun detectarPuertaPorAbertura() {
         val anchoEstimadoCm = max(norte + sur, este + oeste) * 100
 
@@ -246,31 +320,65 @@ class mapeoRealActivity : AppCompatActivity() {
     }
 
     private fun actualizarUI() {
-        tvOeste.text = "Oeste\n${"%.1f".format(oeste)} M"
-        tvNorte.text = "Norte\n${"%.1f".format(norte)} M"
-        tvSur.text = "Sur\n${"%.1f".format(sur)} M"
-        tvEste.text = "Este\n${"%.1f".format(este)} M"
+        if (mostrarMedidasMuros) {
+            tvOeste.text = "Oeste\n${"%.1f".format(oeste)} M"
+            tvNorte.text = "Norte\n${"%.1f".format(norte)} M"
+            tvSur.text = "Sur\n${"%.1f".format(sur)} M"
+            tvEste.text = "Este\n${"%.1f".format(este)} M"
+        } else {
+            tvOeste.text = "Oeste"
+            tvNorte.text = "Norte"
+            tvSur.text = "Sur"
+            tvEste.text = "Este"
+        }
+
         tvDistancia.text = "Distancia\n${"%.1f".format(distanciaTotal)} M"
         tvPequenos.text = "Pequenos\n$obstaculosPequenos"
         tvGrandes.text = "Grandes\n$obstaculosGrandes"
     }
 
+    private fun pausarMapeo(botonStop: View) {
+        mapeoActivo = false
+        modoAuto = false
+        botonMovimientoActivo = botonStop
+        actualizarEstadosBotones()
+    }
+
+    private fun actualizarEstadosBotones() {
+        botonesActivos.forEach { pintarBoton(it, seleccionado = false) }
+
+        if (mapeoActivo) {
+            pintarBoton(findViewById(R.id.btnIniciarSesion), seleccionado = true)
+        }
+
+        if (mostrarMedidasMuros) {
+            pintarBoton(findViewById(R.id.btnMedirModo), seleccionado = true)
+        }
+
+        botonMovimientoActivo?.let {
+            pintarBoton(it, seleccionado = true)
+        }
+    }
+
     private fun marcarBotonActivo(activo: View) {
         botonesActivos.forEach { boton ->
-            val seleccionado = boton == activo
-            val fondo = if (seleccionado) Color.rgb(0, 229, 255) else Color.rgb(14, 60, 110)
-            val icono = if (seleccionado) Color.rgb(10, 42, 74) else Color.rgb(0, 229, 255)
-            val texto = if (seleccionado) Color.rgb(10, 42, 74) else Color.WHITE
+            pintarBoton(boton, boton == activo)
+        }
+    }
 
-            boton.backgroundTintList = ColorStateList.valueOf(fondo)
+    private fun pintarBoton(boton: View, seleccionado: Boolean) {
+        val fondo = if (seleccionado) Color.rgb(0, 229, 255) else Color.rgb(14, 60, 110)
+        val icono = if (seleccionado) Color.rgb(10, 42, 74) else Color.rgb(0, 229, 255)
+        val texto = if (seleccionado) Color.rgb(10, 42, 74) else Color.WHITE
 
-            if (boton is ImageButton) {
-                boton.imageTintList = ColorStateList.valueOf(icono)
-            }
+        boton.backgroundTintList = ColorStateList.valueOf(fondo)
 
-            if (boton is LinearLayout) {
-                pintarHijosBoton(boton, icono, texto)
-            }
+        if (boton is ImageButton) {
+            boton.imageTintList = ColorStateList.valueOf(icono)
+        }
+
+        if (boton is LinearLayout) {
+            pintarHijosBoton(boton, icono, texto)
         }
     }
 
