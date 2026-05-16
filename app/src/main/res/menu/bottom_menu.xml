@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@drawable/ic_home"
+        android:title="Inicio"/>
+
+    <item
+        android:id="@+id/nav_bluetooth"
+        android:icon="@drawable/btn_conectar"
+        android:title="Bluetooth"/>
+
+    <item
+        android:id="@+id/nav_map"
+        android:icon="@drawable/ic_map"
+        android:title="Mapa"/>
+
+    <item
+        android:id="@+id/nav_files"
+        android:icon="@drawable/ic_files"
+        android:title="Archivos"/>
+
+</menu>

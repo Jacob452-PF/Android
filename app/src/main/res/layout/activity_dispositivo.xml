@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_login">
+
+    <!-- Flecha regresar -->
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/ic_regresar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <!-- Botón editar -->
+    <Button
+        android:id="@+id/btnEditar"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:text="Editar"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/bg_card"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintTop_toTopOf="@id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Título -->
+    <TextView
+        android:id="@+id/tituloDispositivo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Conectar a Carrito"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginTop="40dp"
+        app:layout_constraintTop_toBottomOf="@id/btnBack"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Icono carro -->
+    <ImageView
+        android:id="@+id/iconCar"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:src="@drawable/ic_coche"
+        app:tint="#00E5FF"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/tituloDispositivo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Estado -->
+    <TextView
+        android:id="@+id/textEstado"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Conectado"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/iconCar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Descripción -->
+    <TextView
+        android:id="@+id/textInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="El carrito está vinculado y listo para mapear."
+        android:textColor="#BFDFFF"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/textEstado"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- NUEVO TEXTVIEW -->
+    <TextView
+        android:id="@+id/textConexion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HMSoft BLE conectado"
+        android:textColor="#00E5FF"
+        android:textSize="14sp"
+        android:layout_marginTop="6dp"
+        app:layout_constraintTop_toBottomOf="@id/textInfo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Tarjeta dispositivo -->
+    <LinearLayout
+        android:id="@+id/cardDevice"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="@drawable/btn_iniciar"
+        android:layout_marginTop="25dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="30dp"
+        app:layout_constraintTop_toBottomOf="@id/textConexion"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/stat_sys_data_bluetooth"
+            app:tint="#000000"/>
+
+        <TextView
+            android:id="@+id/textDevice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sin dispositivo"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:layout_marginStart="10dp"/>
+
+    </LinearLayout>
+
+    <!-- Botón desconectar -->
+    <Button
+        android:id="@+id/btnDesconectar"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:text="Desconectar"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/card_option"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        app:layout_constraintTop_toBottomOf="@id/cardDevice"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Botón mapear -->
+    <Button
+        android:id="@+id/btnMapear"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:text="Ir a mapear"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/card_option"
+        android:layout_marginTop="15dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        app:layout_constraintTop_toBottomOf="@id/btnDesconectar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

@@ -1,0 +1,60 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="20dp">
+
+    <!-- TÍTULO -->
+    <TextView
+        android:id="@+id/titulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Paso 1 de 5"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="30dp"/>
+
+    <!-- IMAGEN MÁS GRANDE -->
+    <ImageView
+        android:id="@+id/imagen"
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:layout_marginTop="25dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/paso1"/>
+
+    <!-- CARD (DESCRIPCIÓN + CONSEJO) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:padding="18dp"
+        android:orientation="vertical"
+        android:background="@drawable/card_bg">
+
+        <!-- DESCRIPCIÓN -->
+        <TextView
+            android:id="@+id/descripcion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Descripción aquí"
+            android:textColor="#D6E4FF"
+            android:textSize="16sp"
+            android:textAlignment="center"/>
+
+        <!-- CONSEJO -->
+        <TextView
+            android:id="@+id/consejo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tip: consejo aquí"
+            android:textColor="#00CFFF"
+            android:textSize="14sp"
+            android:textAlignment="center"
+            android:layout_marginTop="12dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

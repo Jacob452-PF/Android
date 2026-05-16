@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A2A4A">
+
+    <!-- HEADER -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:background="#0E3C6E"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_regresar"/>
+
+        <TextView
+            android:id="@+id/tituloMapa"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Edificio #2"
+            android:textColor="#FFF"
+            android:textSize="18sp"
+            android:gravity="center"/>
+
+    </LinearLayout>
+
+    <!-- MAPA -->
+    <FrameLayout
+        android:id="@+id/mapa"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:background="#E5E5E5"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- etiquetas -->
+        <TextView
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Oeste\n0 M"
+            android:background="@drawable/bg_card"
+            android:textColor="#FFF"
+            android:layout_gravity="top|start"/>
+
+        <TextView
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Norte\n0 M"
+            android:background="@drawable/bg_card"
+            android:textColor="#FFF"
+            android:layout_gravity="top|end"/>
+
+        <TextView
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Sur\n0 M"
+            android:background="@drawable/bg_card"
+            android:textColor="#FFF"
+            android:layout_gravity="bottom|start"/>
+
+        <TextView
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Este\n0 M"
+            android:background="@drawable/bg_card"
+            android:textColor="#FFF"
+            android:layout_gravity="bottom|end"/>
+
+    </FrameLayout>
+
+    <!-- BOTONES -->
+    <LinearLayout
+        android:id="@+id/acciones"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        app:layout_constraintTop_toBottomOf="@id/mapa"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <Button
+            android:id="@+id/btnExportar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Exportar"
+            android:background="@drawable/btn_iniciar"
+            android:textColor="#FFF"/>
+
+        <Button
+            android:id="@+id/btnEliminar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Eliminar"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/btn_iniciar"
+            android:textColor="#FFF"/>
+
+    </LinearLayout>
+
+    <!-- DATOS -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/bg_card"
+        app:layout_constraintTop_toBottomOf="@id/acciones"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:text="Datos"
+            android:textColor="#FFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"/>
+
+        <TextView android:text="Fecha: 01-01-2026\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content" />
+        <TextView android:text="Tiempo: 10 min\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:text="Área: 15m²\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:text="Distancia: 30m\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:text="Obstáculos pequeños: 12\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:text="Obstáculos grandes: 3\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:text="Obstrucciones: 1\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

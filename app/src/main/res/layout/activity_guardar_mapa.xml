@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A2A4A">
+
+    <!-- HEADER -->
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:background="#0E3C6E"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_regresar"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Guardar mapa"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:layout_marginStart="10dp"/>
+
+    </LinearLayout>
+
+    <!-- MAPA -->
+
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
+        android:background="#E5E5E5"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- OESTE -->
+
+        <TextView
+            android:id="@+id/tvOeste"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Oeste\n0 M"
+            android:textColor="#FFF"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_card"
+            android:layout_gravity="top|start"/>
+
+        <!-- NORTE -->
+
+        <TextView
+            android:id="@+id/tvNorte"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Norte\n0 M"
+            android:textColor="#FFF"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_card"
+            android:layout_gravity="top|end"/>
+
+        <!-- SUR -->
+
+        <TextView
+            android:id="@+id/tvSur"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Sur\n0 M"
+            android:textColor="#FFF"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_card"
+            android:layout_gravity="bottom|start"/>
+
+        <!-- ESTE -->
+
+        <TextView
+            android:id="@+id/tvEste"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:text="Este\n0 M"
+            android:textColor="#FFF"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_card"
+            android:layout_gravity="bottom|end"/>
+
+    </FrameLayout>
+
+    <!-- TARJETA PRINCIPAL -->
+
+    <LinearLayout
+        android:id="@+id/cardPrincipal"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/bg_card"
+        app:layout_constraintTop_toBottomOf="@id/mapContainer"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- TITULO -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Detalles del recorrido"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Datos del recorrido del autómata"
+            android:textColor="#B0C4DE"
+            android:textSize="12sp"
+            android:layout_marginBottom="10dp"/>
+
+        <!-- FILA SUPERIOR -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- AREA -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="#EDEDED">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_home"/>
+
+                <TextView
+                    android:id="@+id/tvArea"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Área: 20m²"
+                    android:textSize="12sp"
+                    android:layout_marginStart="5dp"/>
+            </LinearLayout>
+
+            <!-- TIEMPO -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="#EDEDED">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_reloj"/>
+
+                <TextView
+                    android:id="@+id/tvTiempo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tiempo: 10m"
+                    android:textSize="12sp"
+                    android:layout_marginStart="5dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- DISTANCIA -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_margin="4dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="#EDEDED">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_mapa"/>
+
+            <TextView
+                android:id="@+id/tvDistancia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Distancia: 0 M"
+                android:textSize="12sp"
+                android:layout_marginStart="5dp"/>
+        </LinearLayout>
+
+        <!-- SECCION OBSTACULOS -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Obstáculos y obstrucciones"
+            android:textColor="#B0C4DE"
+            android:textSize="12sp"
+            android:layout_marginTop="10dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- PEQUEÑOS -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="#EDEDED">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_warning"/>
+
+                <TextView
+                    android:id="@+id/tvPequenos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obstáculos pequeños: 0"
+                    android:textSize="12sp"
+                    android:layout_marginStart="5dp"/>
+            </LinearLayout>
+
+            <!-- GRANDES -->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:background="#EDEDED">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_warning"/>
+
+                <TextView
+                    android:id="@+id/tvGrandes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Obstáculos grandes: 0"
+                    android:textSize="12sp"
+                    android:layout_marginStart="5dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- BOTON -->
+
+        <Button
+            android:id="@+id/btnGuardar"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Guardar"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginTop="15dp"
+            android:background="@drawable/btn_iniciar"/>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
