@@ -23,6 +23,25 @@ object BluetoothManager {
     // Bateria actual
     var bateria: Int = 0
 
+    fun enviarDato(mensaje: String): Boolean {
+
+        return try {
+
+            val tx =
+                characteristicTX ?: return false
+
+            tx.value =
+                mensaje.toByteArray()
+
+            bluetoothGatt?.writeCharacteristic(tx) == true
+
+        } catch (e: Exception) {
+
+            e.printStackTrace()
+            false
+        }
+    }
+
     fun cerrarConexion() {
 
         try {

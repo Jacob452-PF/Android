@@ -2,8 +2,10 @@ package com.example.app_panchito_explorer
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -23,65 +25,122 @@ class guardadosActivity : AppCompatActivity() {
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+
         val btnAgregar = findViewById<ImageView>(R.id.btnAgregar)
-
-        btnAgregar.setOnClickListener {
-            val intent = Intent(this, importarMapaActivity::class.java)
-            startActivity(intent)
-        }
-
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        val ruta1 = findViewById<LinearLayout>(R.id.ruta1)
-        val ruta2 = findViewById<LinearLayout>(R.id.ruta2)
+        val listaRutas = findViewById<LinearLayout>(R.id.listaRutas)
 
-        ruta1.setOnClickListener {
-            val intent = Intent(this, verMapaGuardadoActivity::class.java)
-            intent.putExtra("nombre", "Ruta #1")
-            startActivity(intent)
+        btnAgregar.setOnClickListener {
+            startActivity(Intent(this, importarMapaActivity::class.java))
         }
 
-        ruta2.setOnClickListener {
-            val intent = Intent(this, verMapaGuardadoActivity::class.java)
-            intent.putExtra("nombre", "Ruta #2")
-            startActivity(intent)
-        }
+        cargarMapas(listaRutas)
 
-        // marcar el icono activo
         bottomNav.selectedItemId = R.id.nav_files
 
-        // botón regresar
         btnBack.setOnClickListener {
             finish()
         }
 
-        // navegación inferior
         bottomNav.setOnItemSelectedListener {
-
             when (it.itemId) {
-
                 R.id.nav_home -> {
                     startActivity(Intent(this, homeActivity::class.java))
                     true
                 }
-
                 R.id.nav_bluetooth -> {
                     startActivity(Intent(this, bluetoothActivity::class.java))
                     true
                 }
-
                 R.id.nav_map -> {
                     startActivity(Intent(this, antesDeMapearActivity::class.java))
                     true
                 }
-
-                R.id.nav_files -> {
-                    true
-                }
-
+                R.id.nav_files -> true
                 else -> false
             }
-
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val listaRutas = findViewById<LinearLayout>(R.id.listaRutas)
+        cargarMapas(listaRutas)
+    }
+
+    private fun cargarMapas(listaRutas: LinearLayout) {
+        listaRutas.removeAllViews()
+
+        val mapas = DBHelper(this).obtenerMapasGuardados()
+
+        if (mapas.isEmpty()) {
+            val empty = TextView(this).apply {
+                text = "No hay mapas guardados"
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 18f
+            }
+            listaRutas.addView(empty)
+            return
+        }
+
+        mapas.forEach { mapa ->
+            val item = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                setPadding(dp(12), dp(12), dp(12), dp(12))
+                setBackgroundResource(R.drawable.card_option)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    dp(82)
+                ).apply {
+                    bottomMargin = dp(12)
+                }
+            }
+
+            val icon = ImageView(this).apply {
+                setImageResource(R.drawable.ic_map)
+                layoutParams = LinearLayout.LayoutParams(dp(24), dp(24))
+            }
+
+            val textos = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                ).apply {
+                    marginStart = dp(10)
+                }
+            }
+
+            val titulo = TextView(this).apply {
+                text = mapa.nombre
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 18f
+                setTypeface(typeface, android.graphics.Typeface.BOLD)
+            }
+
+            val detalle = TextView(this).apply {
+                text = "${"%.1f".format(mapa.distanciaTotal)} m | Ruta ${DBHelper(this@guardadosActivity).obtenerRutas(mapa.id).size} pts | Puertas ${mapa.puertas}"
+                setTextColor(android.graphics.Color.rgb(191, 223, 255))
+                textSize = 14f
+            }
+
+            textos.addView(titulo)
+            textos.addView(detalle)
+            item.addView(icon)
+            item.addView(textos)
+
+            item.setOnClickListener {
+                val intent = Intent(this, verMapaGuardadoActivity::class.java)
+                intent.putExtra("mapa_id", mapa.id)
+                startActivity(intent)
+            }
+
+            listaRutas.addView(item)
+        }
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).toInt()
     }
 }

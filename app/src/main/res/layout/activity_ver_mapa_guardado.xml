@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="#0A2A4A">
 
-    <!-- HEADER -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="0dp"
@@ -31,14 +30,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Edificio #2"
+            android:text="Mapa guardado"
             android:textColor="#FFF"
             android:textSize="18sp"
             android:gravity="center"/>
 
     </LinearLayout>
 
-    <!-- MAPA -->
     <FrameLayout
         android:id="@+id/mapa"
         android:layout_width="0dp"
@@ -48,42 +46,48 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- etiquetas -->
         <TextView
+            android:id="@+id/tvOesteGuardado"
             android:layout_width="70dp"
             android:layout_height="50dp"
             android:text="Oeste\n0 M"
             android:background="@drawable/bg_card"
             android:textColor="#FFF"
+            android:gravity="center"
             android:layout_gravity="top|start"/>
 
         <TextView
+            android:id="@+id/tvNorteGuardado"
             android:layout_width="70dp"
             android:layout_height="50dp"
             android:text="Norte\n0 M"
             android:background="@drawable/bg_card"
             android:textColor="#FFF"
+            android:gravity="center"
             android:layout_gravity="top|end"/>
 
         <TextView
+            android:id="@+id/tvSurGuardado"
             android:layout_width="70dp"
             android:layout_height="50dp"
             android:text="Sur\n0 M"
             android:background="@drawable/bg_card"
             android:textColor="#FFF"
+            android:gravity="center"
             android:layout_gravity="bottom|start"/>
 
         <TextView
+            android:id="@+id/tvEsteGuardado"
             android:layout_width="70dp"
             android:layout_height="50dp"
             android:text="Este\n0 M"
             android:background="@drawable/bg_card"
             android:textColor="#FFF"
+            android:gravity="center"
             android:layout_gravity="bottom|end"/>
 
     </FrameLayout>
 
-    <!-- BOTONES -->
     <LinearLayout
         android:id="@+id/acciones"
         android:layout_width="0dp"
@@ -115,7 +119,6 @@
 
     </LinearLayout>
 
-    <!-- DATOS -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -135,13 +138,12 @@
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"/>
 
-        <TextView android:text="Fecha: 01-01-2026\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content" />
-        <TextView android:text="Tiempo: 10 min\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-        <TextView android:text="Área: 15m²\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-        <TextView android:text="Distancia: 30m\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-        <TextView android:text="Obstáculos pequeños: 12\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-        <TextView android:text="Obstáculos grandes: 3\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
-        <TextView android:text="Obstrucciones: 1\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:id="@+id/tvTiempo" android:text="Tiempo: 0 s\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:id="@+id/tvRuta" android:text="Ruta manual: 0 puntos\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:id="@+id/tvDistanciaGuardada" android:text="Distancia: 0 m\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:id="@+id/tvPequenosGuardados" android:text="Obstaculos pequenos: 0\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:id="@+id/tvGrandesGuardados" android:text="Obstaculos grandes: 0\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
+        <TextView android:id="@+id/tvPuertas" android:text="Puertas posibles: 0\n" android:textColor="#FFF" android:layout_height="wrap_content" android:layout_width="wrap_content"/>
 
     </LinearLayout>
 

@@ -5,11 +5,46 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
+data class MapaGuardado(
+    val id: Int,
+    val nombre: String,
+    val descripcion: String,
+    val distanciaTotal: Double,
+    val tiempoSegundos: Int,
+    val oeste: Double,
+    val norte: Double,
+    val sur: Double,
+    val este: Double,
+    val pequenos: Int,
+    val grandes: Int,
+    val puertas: Int
+)
+
+data class RutaPunto(
+    val orden: Int,
+    val x: Double,
+    val y: Double,
+    val modo: String
+)
+
 class DBHelper(context: Context) :
-    SQLiteOpenHelper(context, "panchito.db", null, 1) {
+    SQLiteOpenHelper(context, "panchito.db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
+        crearTablas(db)
+    }
 
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        db.execSQL("DROP TABLE IF EXISTS puertas")
+        db.execSQL("DROP TABLE IF EXISTS rutas")
+        db.execSQL("DROP TABLE IF EXISTS obstaculos")
+        db.execSQL("DROP TABLE IF EXISTS muros")
+        db.execSQL("DROP TABLE IF EXISTS mapas")
+        db.execSQL("DROP TABLE IF EXISTS dispositivos")
+        crearTablas(db)
+    }
+
+    private fun crearTablas(db: SQLiteDatabase) {
         db.execSQL("""
             CREATE TABLE dispositivos(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,6 +59,14 @@ class DBHelper(context: Context) :
                 nombre TEXT,
                 descripcion TEXT,
                 distancia_total REAL,
+                tiempo_segundos INTEGER DEFAULT 0,
+                oeste REAL DEFAULT 0,
+                norte REAL DEFAULT 0,
+                sur REAL DEFAULT 0,
+                este REAL DEFAULT 0,
+                obstaculos_pequenos INTEGER DEFAULT 0,
+                obstaculos_grandes INTEGER DEFAULT 0,
+                puertas INTEGER DEFAULT 0,
                 entradas TEXT,
                 salidas TEXT,
                 dispositivo_id INTEGER
@@ -34,6 +77,7 @@ class DBHelper(context: Context) :
             CREATE TABLE muros(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 mapa_id INTEGER,
+                direccion TEXT,
                 distancia REAL
             )
         """)
@@ -42,105 +86,215 @@ class DBHelper(context: Context) :
             CREATE TABLE obstaculos(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 mapa_id INTEGER,
-                tamaño TEXT,
+                tamano TEXT,
                 ancho REAL,
-                alto REAL
+                alto REAL,
+                distancia REAL DEFAULT 0,
+                angulo INTEGER DEFAULT -1,
+                modo TEXT
+            )
+        """)
+
+        db.execSQL("""
+            CREATE TABLE rutas(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mapa_id INTEGER,
+                orden INTEGER,
+                x REAL,
+                y REAL,
+                modo TEXT
+            )
+        """)
+
+        db.execSQL("""
+            CREATE TABLE puertas(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mapa_id INTEGER,
+                orden INTEGER,
+                x REAL,
+                y REAL,
+                ancho_estimado REAL,
+                nota TEXT
             )
         """)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS obstaculos")
-        db.execSQL("DROP TABLE IF EXISTS muros")
-        db.execSQL("DROP TABLE IF EXISTS mapas")
-        db.execSQL("DROP TABLE IF EXISTS dispositivos")
-        onCreate(db)
-    }
-
-    // ===============================
-    // 📡 INSERTAR DISPOSITIVO
-    // ===============================
     fun insertarDispositivo(nombre: String, direccion: String): Long {
-        val db = writableDatabase
         val values = ContentValues().apply {
             put("nombre", nombre)
             put("direccion", direccion)
         }
-        return db.insert("dispositivos", null, values)
+        return writableDatabase.insert("dispositivos", null, values)
     }
 
-    // ===============================
-    // 🗺️ INSERTAR MAPA
-    // ===============================
     fun insertarMapa(
         nombre: String,
         descripcion: String,
         distancia: Double,
-        entradas: String,
-        salidas: String,
-        dispositivoId: Int
+        tiempoSegundos: Int,
+        oeste: Double,
+        norte: Double,
+        sur: Double,
+        este: Double,
+        pequenos: Int,
+        grandes: Int,
+        puertas: Int,
+        dispositivoId: Int = 0
     ): Long {
-        val db = writableDatabase
         val values = ContentValues().apply {
             put("nombre", nombre)
             put("descripcion", descripcion)
             put("distancia_total", distancia)
-            put("entradas", entradas)
-            put("salidas", salidas)
+            put("tiempo_segundos", tiempoSegundos)
+            put("oeste", oeste)
+            put("norte", norte)
+            put("sur", sur)
+            put("este", este)
+            put("obstaculos_pequenos", pequenos)
+            put("obstaculos_grandes", grandes)
+            put("puertas", puertas)
+            put("entradas", "")
+            put("salidas", "")
             put("dispositivo_id", dispositivoId)
         }
-        return db.insert("mapas", null, values)
+        return writableDatabase.insert("mapas", null, values)
     }
 
-    // ===============================
-    // 🧱 INSERTAR MURO
-    // ===============================
-    fun insertarMuro(mapaId: Int, distancia: Double): Long {
-        val db = writableDatabase
+    fun insertarMuro(mapaId: Int, direccion: String, distancia: Double): Long {
         val values = ContentValues().apply {
             put("mapa_id", mapaId)
+            put("direccion", direccion)
             put("distancia", distancia)
         }
-        return db.insert("muros", null, values)
+        return writableDatabase.insert("muros", null, values)
     }
 
-    // ===============================
-    // ⚠️ INSERTAR OBSTÁCULO
-    // ===============================
     fun insertarObstaculo(
         mapaId: Int,
-        tamaño: String,
+        tamano: String,
         ancho: Double,
-        alto: Double
+        alto: Double,
+        distancia: Double,
+        angulo: Int,
+        modo: String
     ): Long {
-        val db = writableDatabase
         val values = ContentValues().apply {
             put("mapa_id", mapaId)
-            put("tamaño", tamaño)
+            put("tamano", tamano)
             put("ancho", ancho)
             put("alto", alto)
+            put("distancia", distancia)
+            put("angulo", angulo)
+            put("modo", modo)
         }
-        return db.insert("obstaculos", null, values)
+        return writableDatabase.insert("obstaculos", null, values)
     }
 
-    // ===============================
-    // 📖 OBTENER MAPAS
-    // ===============================
-    fun obtenerMapas(): List<String> {
-        val lista = mutableListOf<String>()
-        val db = readableDatabase
+    fun insertarRutaPunto(mapaId: Int, orden: Int, x: Double, y: Double, modo: String): Long {
+        val values = ContentValues().apply {
+            put("mapa_id", mapaId)
+            put("orden", orden)
+            put("x", x)
+            put("y", y)
+            put("modo", modo)
+        }
+        return writableDatabase.insert("rutas", null, values)
+    }
 
-        val cursor = db.rawQuery("SELECT * FROM mapas", null)
+    fun insertarPuerta(
+        mapaId: Int,
+        orden: Int,
+        x: Double,
+        y: Double,
+        anchoEstimado: Double,
+        nota: String
+    ): Long {
+        val values = ContentValues().apply {
+            put("mapa_id", mapaId)
+            put("orden", orden)
+            put("x", x)
+            put("y", y)
+            put("ancho_estimado", anchoEstimado)
+            put("nota", nota)
+        }
+        return writableDatabase.insert("puertas", null, values)
+    }
 
-        if (cursor.moveToFirst()) {
-            do {
-                val nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre"))
-                val descripcion = cursor.getString(cursor.getColumnIndexOrThrow("descripcion"))
-                lista.add("$nombre - $descripcion")
-            } while (cursor.moveToNext())
+    fun obtenerMapasGuardados(): List<MapaGuardado> {
+        val lista = mutableListOf<MapaGuardado>()
+        val cursor = readableDatabase.rawQuery(
+            """
+            SELECT id,nombre,descripcion,distancia_total,tiempo_segundos,
+                   oeste,norte,sur,este,obstaculos_pequenos,
+                   obstaculos_grandes,puertas
+            FROM mapas
+            ORDER BY id DESC
+            """,
+            null
+        )
+
+        cursor.use {
+            while (it.moveToNext()) {
+                lista.add(
+                    MapaGuardado(
+                        id = it.getInt(0),
+                        nombre = it.getString(1),
+                        descripcion = it.getString(2),
+                        distanciaTotal = it.getDouble(3),
+                        tiempoSegundos = it.getInt(4),
+                        oeste = it.getDouble(5),
+                        norte = it.getDouble(6),
+                        sur = it.getDouble(7),
+                        este = it.getDouble(8),
+                        pequenos = it.getInt(9),
+                        grandes = it.getInt(10),
+                        puertas = it.getInt(11)
+                    )
+                )
+            }
         }
 
-        cursor.close()
         return lista
+    }
+
+    fun obtenerMapa(id: Int): MapaGuardado? {
+        return obtenerMapasGuardados().firstOrNull { it.id == id }
+    }
+
+    fun obtenerRutas(mapaId: Int): List<RutaPunto> {
+        val lista = mutableListOf<RutaPunto>()
+        val cursor = readableDatabase.rawQuery(
+            "SELECT orden,x,y,modo FROM rutas WHERE mapa_id=? ORDER BY orden",
+            arrayOf(mapaId.toString())
+        )
+
+        cursor.use {
+            while (it.moveToNext()) {
+                lista.add(
+                    RutaPunto(
+                        orden = it.getInt(0),
+                        x = it.getDouble(1),
+                        y = it.getDouble(2),
+                        modo = it.getString(3)
+                    )
+                )
+            }
+        }
+
+        return lista
+    }
+
+    fun obtenerMapas(): List<String> {
+        return obtenerMapasGuardados().map { "${it.nombre} - ${it.descripcion}" }
+    }
+
+    fun eliminarMapa(id: Int) {
+        val db = writableDatabase
+        val args = arrayOf(id.toString())
+        db.delete("puertas", "mapa_id=?", args)
+        db.delete("rutas", "mapa_id=?", args)
+        db.delete("obstaculos", "mapa_id=?", args)
+        db.delete("muros", "mapa_id=?", args)
+        db.delete("mapas", "id=?", args)
     }
 }

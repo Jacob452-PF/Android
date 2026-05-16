@@ -5,10 +5,14 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class guardarMapaActivity : AppCompatActivity() {
 
@@ -23,52 +27,103 @@ class guardarMapaActivity : AppCompatActivity() {
             insets
         }
 
-        // 🔥 REFERENCIAS
         val tvOeste = findViewById<TextView>(R.id.tvOeste)
         val tvNorte = findViewById<TextView>(R.id.tvNorte)
         val tvSur = findViewById<TextView>(R.id.tvSur)
         val tvEste = findViewById<TextView>(R.id.tvEste)
-
         val tvDistancia = findViewById<TextView>(R.id.tvDistancia)
         val tvPequenos = findViewById<TextView>(R.id.tvPequenos)
         val tvGrandes = findViewById<TextView>(R.id.tvGrandes)
-
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val btnGuardar = findViewById<Button>(R.id.btnGuardar)
 
-        // 🔥 DATOS RECIBIDOS
         val oeste = intent.getDoubleExtra("oeste", 0.0)
         val norte = intent.getDoubleExtra("norte", 0.0)
         val sur = intent.getDoubleExtra("sur", 0.0)
         val este = intent.getDoubleExtra("este", 0.0)
-
         val distancia = intent.getDoubleExtra("distancia_total", 0.0)
-
+        val tiempoSegundos = intent.getIntExtra("tiempo_segundos", 0)
         val pequenos = intent.getIntExtra("pequenos", 0)
         val grandes = intent.getIntExtra("grandes", 0)
+        val puertas = intent.getIntExtra("puertas", 0)
+        val rutaManual = intent.getStringArrayListExtra("ruta_manual") ?: arrayListOf()
 
-        // 🔥 MOSTRAR DATOS
-        tvOeste.text = "Oeste\n${oeste} M"
-        tvNorte.text = "Norte\n${norte} M"
-        tvSur.text = "Sur\n${sur} M"
-        tvEste.text = "Este\n${este} M"
+        tvOeste.text = "Oeste\n${"%.1f".format(oeste)} M"
+        tvNorte.text = "Norte\n${"%.1f".format(norte)} M"
+        tvSur.text = "Sur\n${"%.1f".format(sur)} M"
+        tvEste.text = "Este\n${"%.1f".format(este)} M"
+        tvDistancia.text = "Distancia: ${"%.1f".format(distancia)} M"
+        tvPequenos.text = "Obstaculos pequenos: $pequenos"
+        tvGrandes.text = "Obstaculos grandes: $grandes | Puertas posibles: $puertas"
 
-        tvDistancia.text = "Distancia: ${distancia} M"
-
-        tvPequenos.text = "Obstáculos pequeños: $pequenos"
-        tvGrandes.text = "Obstáculos grandes: $grandes"
-
-        // 🔙 VOLVER
         btnBack.setOnClickListener {
             finish()
         }
 
-        // 💾 GUARDAR MAPA
         btnGuardar.setOnClickListener {
+            val db = DBHelper(this)
+            val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+            val nombre = "Mapa $fecha"
+            val descripcion = "Ruta manual: ${rutaManual.size} puntos"
 
-            val intent = Intent(this, guardadosActivity::class.java)
+            val mapaId = db.insertarMapa(
+                nombre = nombre,
+                descripcion = descripcion,
+                distancia = distancia,
+                tiempoSegundos = tiempoSegundos,
+                oeste = oeste,
+                norte = norte,
+                sur = sur,
+                este = este,
+                pequenos = pequenos,
+                grandes = grandes,
+                puertas = puertas
+            ).toInt()
 
-            startActivity(intent)
+            if (mapaId <= 0) {
+                Toast.makeText(this, "No se pudo guardar el mapa", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            db.insertarMuro(mapaId, "Oeste", oeste)
+            db.insertarMuro(mapaId, "Norte", norte)
+            db.insertarMuro(mapaId, "Sur", sur)
+            db.insertarMuro(mapaId, "Este", este)
+
+            repeat(pequenos) {
+                db.insertarObstaculo(mapaId, "pequeno", 0.0, 18.0, 0.0, -1, "auto")
+            }
+
+            repeat(grandes) {
+                db.insertarObstaculo(mapaId, "grande", 0.0, 18.0, 0.0, -1, "auto")
+            }
+
+            rutaManual.forEach { punto ->
+                val partes = punto.split(",")
+                if (partes.size >= 4) {
+                    db.insertarRutaPunto(
+                        mapaId = mapaId,
+                        orden = partes[0].toIntOrNull() ?: 0,
+                        x = partes[1].toDoubleOrNull() ?: 0.0,
+                        y = partes[2].toDoubleOrNull() ?: 0.0,
+                        modo = partes[3]
+                    )
+                }
+            }
+
+            repeat(puertas) { index ->
+                db.insertarPuerta(
+                    mapaId = mapaId,
+                    orden = index,
+                    x = 0.0,
+                    y = 0.0,
+                    anchoEstimado = 70.0,
+                    nota = "Puerta posible para robot de 16-18 cm de alto"
+                )
+            }
+
+            Toast.makeText(this, "Mapa guardado", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, guardadosActivity::class.java))
             finish()
         }
     }
