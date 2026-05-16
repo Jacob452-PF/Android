@@ -1,7 +1,10 @@
 package com.example.app_panchito_explorer
 
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -45,6 +48,7 @@ class mapeoRealActivity : AppCompatActivity() {
     private lateinit var tvPequenos: TextView
     private lateinit var tvGrandes: TextView
     private lateinit var mapaPreview: MapaPreviewView
+    private val botonesActivos = arrayListOf<View>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +63,7 @@ class mapeoRealActivity : AppCompatActivity() {
         val btnRight = findViewById<ImageButton>(R.id.btnRight)
         val btnStop = findViewById<ImageButton>(R.id.btnStop)
         val btnIniciarSesion = findViewById<LinearLayout>(R.id.btnIniciarSesion)
+        val btnStopModo = findViewById<LinearLayout>(R.id.btnStopModo)
         val btnMedirModo = findViewById<LinearLayout>(R.id.btnMedirModo)
         val btnAutoModo = findViewById<LinearLayout>(R.id.btnAutoModo)
 
@@ -70,50 +75,77 @@ class mapeoRealActivity : AppCompatActivity() {
         tvPequenos = findViewById(R.id.tvPequenos)
         tvGrandes = findViewById(R.id.tvGrandes)
         mapaPreview = findViewById(R.id.mapaPreview)
+        botonesActivos.addAll(
+            listOf(
+                btnUp,
+                btnDown,
+                btnLeft,
+                btnRight,
+                btnStop,
+                btnIniciarSesion,
+                btnStopModo,
+                btnMedirModo,
+                btnAutoModo
+            )
+        )
 
         BluetoothManager.enviarDato("I")
+        marcarBotonActivo(btnIniciarSesion)
         actualizarUI()
 
         btnIniciarSesion.setOnClickListener {
+            marcarBotonActivo(btnIniciarSesion)
             modoManual = true
             reiniciarMapa()
             enviarComando("I")
         }
 
         btnMedirModo.setOnClickListener {
+            marcarBotonActivo(btnMedirModo)
             modoManual = false
             enviarComando("M")
         }
 
         btnAutoModo.setOnClickListener {
+            marcarBotonActivo(btnAutoModo)
             modoManual = false
             enviarComando("A")
         }
 
         btnUp.setOnClickListener {
+            marcarBotonActivo(btnUp)
             modoManual = true
             enviarComando("F")
             registrarPasoManual(0.18)
         }
 
         btnDown.setOnClickListener {
+            marcarBotonActivo(btnDown)
             modoManual = true
             enviarComando("B")
         }
 
         btnLeft.setOnClickListener {
+            marcarBotonActivo(btnLeft)
             modoManual = true
             heading = (heading + 270) % 360
             enviarComando("L")
         }
 
         btnRight.setOnClickListener {
+            marcarBotonActivo(btnRight)
             modoManual = true
             heading = (heading + 90) % 360
             enviarComando("R")
         }
 
         btnStop.setOnClickListener {
+            marcarBotonActivo(btnStop)
+            enviarComando("S")
+        }
+
+        btnStopModo.setOnClickListener {
+            marcarBotonActivo(btnStopModo)
             enviarComando("S")
         }
 
@@ -221,6 +253,34 @@ class mapeoRealActivity : AppCompatActivity() {
         tvDistancia.text = "Distancia\n${"%.1f".format(distanciaTotal)} M"
         tvPequenos.text = "Pequenos\n$obstaculosPequenos"
         tvGrandes.text = "Grandes\n$obstaculosGrandes"
+    }
+
+    private fun marcarBotonActivo(activo: View) {
+        botonesActivos.forEach { boton ->
+            val seleccionado = boton == activo
+            val fondo = if (seleccionado) Color.rgb(0, 229, 255) else Color.rgb(14, 60, 110)
+            val icono = if (seleccionado) Color.rgb(10, 42, 74) else Color.rgb(0, 229, 255)
+            val texto = if (seleccionado) Color.rgb(10, 42, 74) else Color.WHITE
+
+            boton.backgroundTintList = ColorStateList.valueOf(fondo)
+
+            if (boton is ImageButton) {
+                boton.imageTintList = ColorStateList.valueOf(icono)
+            }
+
+            if (boton is LinearLayout) {
+                pintarHijosBoton(boton, icono, texto)
+            }
+        }
+    }
+
+    private fun pintarHijosBoton(contenedor: LinearLayout, icono: Int, texto: Int) {
+        for (i in 0 until contenedor.childCount) {
+            when (val hijo = contenedor.getChildAt(i)) {
+                is ImageView -> hijo.imageTintList = ColorStateList.valueOf(icono)
+                is TextView -> hijo.setTextColor(texto)
+            }
+        }
     }
 
     private fun mostrarAdvertenciaSalida() {
