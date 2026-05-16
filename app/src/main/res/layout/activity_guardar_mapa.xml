@@ -48,6 +48,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <com.example.app_panchito_explorer.MapaPreviewView
+            android:id="@+id/mapaPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
         <!-- OESTE -->
 
         <TextView

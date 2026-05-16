@@ -27,6 +27,14 @@ data class RutaPunto(
     val modo: String
 )
 
+data class PuertaGuardada(
+    val orden: Int,
+    val x: Double,
+    val y: Double,
+    val anchoEstimado: Double,
+    val nota: String
+)
+
 class DBHelper(context: Context) :
     SQLiteOpenHelper(context, "panchito.db", null, 2) {
 
@@ -276,6 +284,30 @@ class DBHelper(context: Context) :
                         x = it.getDouble(1),
                         y = it.getDouble(2),
                         modo = it.getString(3)
+                    )
+                )
+            }
+        }
+
+        return lista
+    }
+
+    fun obtenerPuertas(mapaId: Int): List<PuertaGuardada> {
+        val lista = mutableListOf<PuertaGuardada>()
+        val cursor = readableDatabase.rawQuery(
+            "SELECT orden,x,y,ancho_estimado,nota FROM puertas WHERE mapa_id=? ORDER BY orden",
+            arrayOf(mapaId.toString())
+        )
+
+        cursor.use {
+            while (it.moveToNext()) {
+                lista.add(
+                    PuertaGuardada(
+                        orden = it.getInt(0),
+                        x = it.getDouble(1),
+                        y = it.getDouble(2),
+                        anchoEstimado = it.getDouble(3),
+                        nota = it.getString(4)
                     )
                 )
             }

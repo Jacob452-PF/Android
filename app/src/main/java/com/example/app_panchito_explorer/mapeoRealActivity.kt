@@ -44,6 +44,7 @@ class mapeoRealActivity : AppCompatActivity() {
     private lateinit var tvDistancia: TextView
     private lateinit var tvPequenos: TextView
     private lateinit var tvGrandes: TextView
+    private lateinit var mapaPreview: MapaPreviewView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +69,7 @@ class mapeoRealActivity : AppCompatActivity() {
         tvDistancia = findViewById(R.id.tvDistancia)
         tvPequenos = findViewById(R.id.tvPequenos)
         tvGrandes = findViewById(R.id.tvGrandes)
+        mapaPreview = findViewById(R.id.mapaPreview)
 
         BluetoothManager.enviarDato("I")
         actualizarUI()
@@ -180,6 +182,7 @@ class mapeoRealActivity : AppCompatActivity() {
 
         rutaManual.add("${ordenRuta++},$posX,$posY,manual")
         detectarPuertaPorAbertura()
+        mapaPreview.setRutaDesdeTexto(rutaManual, puertasDetectadas)
         actualizarUI()
     }
 
@@ -198,6 +201,7 @@ class mapeoRealActivity : AppCompatActivity() {
         posY = 0.0
         ordenRuta = 0
         rutaManual.clear()
+        mapaPreview.setRutaDesdeTexto(rutaManual, puertasDetectadas)
         actualizarUI()
     }
 

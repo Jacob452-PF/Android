@@ -34,6 +34,7 @@ class guardarMapaActivity : AppCompatActivity() {
         val tvDistancia = findViewById<TextView>(R.id.tvDistancia)
         val tvPequenos = findViewById<TextView>(R.id.tvPequenos)
         val tvGrandes = findViewById<TextView>(R.id.tvGrandes)
+        val mapaPreview = findViewById<MapaPreviewView>(R.id.mapaPreview)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val btnGuardar = findViewById<Button>(R.id.btnGuardar)
 
@@ -55,6 +56,7 @@ class guardarMapaActivity : AppCompatActivity() {
         tvDistancia.text = "Distancia: ${"%.1f".format(distancia)} M"
         tvPequenos.text = "Obstaculos pequenos: $pequenos"
         tvGrandes.text = "Obstaculos grandes: $grandes | Puertas posibles: $puertas"
+        mapaPreview.setRutaDesdeTexto(rutaManual, puertas)
 
         btnBack.setOnClickListener {
             finish()
