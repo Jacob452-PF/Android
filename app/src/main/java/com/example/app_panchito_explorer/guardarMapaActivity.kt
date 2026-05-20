@@ -16,8 +16,13 @@ import java.util.Locale
 
 class guardarMapaActivity : AppCompatActivity() {
 
+    // =========================
+    // ON CREATE
+    // =========================
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Configura pantalla completa y aplica padding segun las barras del sistema.
         enableEdgeToEdge()
         setContentView(R.layout.activity_guardar_mapa)
 
@@ -27,6 +32,7 @@ class guardarMapaActivity : AppCompatActivity() {
             insets
         }
 
+        // Referencias de resumen, vista previa y acciones.
         val tvOeste = findViewById<TextView>(R.id.tvOeste)
         val tvNorte = findViewById<TextView>(R.id.tvNorte)
         val tvSur = findViewById<TextView>(R.id.tvSur)
@@ -38,6 +44,7 @@ class guardarMapaActivity : AppCompatActivity() {
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val btnGuardar = findViewById<Button>(R.id.btnGuardar)
 
+        // Datos enviados desde la pantalla de mapeo.
         val oeste = intent.getDoubleExtra("oeste", 0.0)
         val norte = intent.getDoubleExtra("norte", 0.0)
         val sur = intent.getDoubleExtra("sur", 0.0)
@@ -48,7 +55,22 @@ class guardarMapaActivity : AppCompatActivity() {
         val grandes = intent.getIntExtra("grandes", 0)
         val puertas = intent.getIntExtra("puertas", 0)
         val rutaManual = intent.getStringArrayListExtra("ruta_manual") ?: arrayListOf()
+        val muroPuntosTexto = intent.getStringArrayListExtra("muro_puntos") ?: arrayListOf()
+        // Convierte los puntos de muro recibidos como texto a objetos del mapa.
+        val muroPuntos = muroPuntosTexto.mapNotNull { punto ->
+            val partes = punto.split(",")
+            if (partes.size < 2) {
+                null
+            } else {
+                MuroPunto(
+                    x = partes[0].toDoubleOrNull() ?: 0.0,
+                    y = partes[1].toDoubleOrNull() ?: 0.0,
+                    grupo = partes.getOrNull(2)?.toIntOrNull() ?: 0
+                )
+            }
+        }
 
+        // Muestra el resumen de medidas y obstaculos antes de guardar.
         tvOeste.text = "Oeste\n${"%.1f".format(oeste)} M"
         tvNorte.text = "Norte\n${"%.1f".format(norte)} M"
         tvSur.text = "Sur\n${"%.1f".format(sur)} M"
@@ -56,12 +78,18 @@ class guardarMapaActivity : AppCompatActivity() {
         tvDistancia.text = "Distancia: ${"%.1f".format(distancia)} M"
         tvPequenos.text = "Obstaculos pequenos: $pequenos"
         tvGrandes.text = "Obstaculos grandes: $grandes | Puertas posibles: $puertas"
+        mapaPreview.setMedidasMuros(oeste, norte, sur, este)
+        mapaPreview.setMostrarMedidas(true)
         mapaPreview.setRutaDesdeTexto(rutaManual, puertas)
+        mapaPreview.setMedidasMuros(oeste, norte, sur, este)
+        mapaPreview.setMuroPuntos(muroPuntos)
 
+        // Regresa sin guardar.
         btnBack.setOnClickListener {
             finish()
         }
 
+        // Guarda el mapa completo en la base de datos local.
         btnGuardar.setOnClickListener {
             val db = DBHelper(this)
             val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
@@ -87,11 +115,13 @@ class guardarMapaActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            // Guarda las medidas de los muros.
             db.insertarMuro(mapaId, "Oeste", oeste)
             db.insertarMuro(mapaId, "Norte", norte)
             db.insertarMuro(mapaId, "Sur", sur)
             db.insertarMuro(mapaId, "Este", este)
 
+            // Registra el conteo de obstaculos detectados.
             repeat(pequenos) {
                 db.insertarObstaculo(mapaId, "pequeno", 0.0, 18.0, 0.0, -1, "auto")
             }
@@ -100,6 +130,7 @@ class guardarMapaActivity : AppCompatActivity() {
                 db.insertarObstaculo(mapaId, "grande", 0.0, 18.0, 0.0, -1, "auto")
             }
 
+            // Guarda cada punto de la ruta manual.
             rutaManual.forEach { punto ->
                 val partes = punto.split(",")
                 if (partes.size >= 4) {
@@ -113,6 +144,18 @@ class guardarMapaActivity : AppCompatActivity() {
                 }
             }
 
+            // Guarda los puntos reales de muros creados durante el escaneo.
+            muroPuntos.forEachIndexed { index, punto ->
+                db.insertarMuroPunto(
+                    mapaId = mapaId,
+                    orden = index,
+                    x = punto.x,
+                    y = punto.y,
+                    grupo = punto.grupo
+                )
+            }
+
+            // Registra las puertas posibles calculadas para este mapa.
             repeat(puertas) { index ->
                 db.insertarPuerta(
                     mapaId = mapaId,
@@ -124,6 +167,7 @@ class guardarMapaActivity : AppCompatActivity() {
                 )
             }
 
+            // Lleva al usuario al listado de mapas despues de guardar.
             Toast.makeText(this, "Mapa guardado", Toast.LENGTH_SHORT).show()
             startActivity(Intent(this, guardadosActivity::class.java))
             finish()

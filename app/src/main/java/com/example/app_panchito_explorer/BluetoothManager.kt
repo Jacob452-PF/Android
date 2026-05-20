@@ -23,12 +23,25 @@ object BluetoothManager {
     // Bateria actual
     var bateria: Int = 0
 
+    private var serialBuffer = StringBuilder()
+    var onLineaRecibida: ((String) -> Unit)? = null
+
     fun enviarDato(mensaje: String): Boolean {
 
         return try {
 
             val tx =
                 characteristicTX ?: return false
+
+            tx.writeType =
+                if (
+                    tx.properties and
+                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0
+                ) {
+                    BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                } else {
+                    BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                }
 
             tx.value =
                 mensaje.toByteArray()
@@ -60,5 +73,24 @@ object BluetoothManager {
         bluetoothGatt = null
         characteristicTX = null
         bateria = 0
+        serialBuffer.clear()
+        onLineaRecibida = null
+    }
+
+    fun procesarDatoRecibido(bytes: ByteArray) {
+        val texto = bytes.toString(Charsets.UTF_8)
+
+        for (char in texto) {
+            if (char == '\n' || char == '\r') {
+                val linea = serialBuffer.toString().trim()
+                serialBuffer.clear()
+
+                if (linea.isNotEmpty()) {
+                    onLineaRecibida?.invoke(linea)
+                }
+            } else {
+                serialBuffer.append(char)
+            }
+        }
     }
 }

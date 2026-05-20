@@ -36,15 +36,24 @@ data class PuertaGuardada(
 )
 
 class DBHelper(context: Context) :
-    SQLiteOpenHelper(context, "panchito.db", null, 2) {
+    SQLiteOpenHelper(context, "panchito.db", null, 4) {
 
     override fun onCreate(db: SQLiteDatabase) {
         crearTablas(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 3) {
+            crearTablaMuroPuntos(db)
+            return
+        } else if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE muro_puntos ADD COLUMN grupo INTEGER DEFAULT 0")
+            return
+        }
+
         db.execSQL("DROP TABLE IF EXISTS puertas")
         db.execSQL("DROP TABLE IF EXISTS rutas")
+        db.execSQL("DROP TABLE IF EXISTS muro_puntos")
         db.execSQL("DROP TABLE IF EXISTS obstaculos")
         db.execSQL("DROP TABLE IF EXISTS muros")
         db.execSQL("DROP TABLE IF EXISTS mapas")
@@ -90,6 +99,8 @@ class DBHelper(context: Context) :
             )
         """)
 
+        crearTablaMuroPuntos(db)
+
         db.execSQL("""
             CREATE TABLE obstaculos(
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -123,6 +134,19 @@ class DBHelper(context: Context) :
                 y REAL,
                 ancho_estimado REAL,
                 nota TEXT
+            )
+        """)
+    }
+
+    private fun crearTablaMuroPuntos(db: SQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS muro_puntos(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mapa_id INTEGER,
+                orden INTEGER,
+                x REAL,
+                y REAL,
+                grupo INTEGER DEFAULT 0
             )
         """)
     }
@@ -207,6 +231,17 @@ class DBHelper(context: Context) :
             put("modo", modo)
         }
         return writableDatabase.insert("rutas", null, values)
+    }
+
+    fun insertarMuroPunto(mapaId: Int, orden: Int, x: Double, y: Double, grupo: Int): Long {
+        val values = ContentValues().apply {
+            put("mapa_id", mapaId)
+            put("orden", orden)
+            put("x", x)
+            put("y", y)
+            put("grupo", grupo)
+        }
+        return writableDatabase.insert("muro_puntos", null, values)
     }
 
     fun insertarPuerta(
@@ -316,6 +351,28 @@ class DBHelper(context: Context) :
         return lista
     }
 
+    fun obtenerMuroPuntos(mapaId: Int): List<MuroPunto> {
+        val lista = mutableListOf<MuroPunto>()
+        val cursor = readableDatabase.rawQuery(
+            "SELECT x,y,grupo FROM muro_puntos WHERE mapa_id=? ORDER BY orden",
+            arrayOf(mapaId.toString())
+        )
+
+        cursor.use {
+            while (it.moveToNext()) {
+                lista.add(
+                    MuroPunto(
+                        x = it.getDouble(0),
+                        y = it.getDouble(1),
+                        grupo = it.getInt(2)
+                    )
+                )
+            }
+        }
+
+        return lista
+    }
+
     fun obtenerMapas(): List<String> {
         return obtenerMapasGuardados().map { "${it.nombre} - ${it.descripcion}" }
     }
@@ -325,6 +382,7 @@ class DBHelper(context: Context) :
         val args = arrayOf(id.toString())
         db.delete("puertas", "mapa_id=?", args)
         db.delete("rutas", "mapa_id=?", args)
+        db.delete("muro_puntos", "mapa_id=?", args)
         db.delete("obstaculos", "mapa_id=?", args)
         db.delete("muros", "mapa_id=?", args)
         db.delete("mapas", "id=?", args)

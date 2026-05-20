@@ -12,8 +12,10 @@ import androidx.appcompat.app.AppCompatActivity
 
 class verMapaGuardadoActivity : AppCompatActivity() {
 
+    // Id del mapa abierto; se usa al exportar.
     private var mapaActualId = -1
 
+    // Crea un archivo con el formato propio de la app y luego lo comparte.
     private val crearArchivo = registerForActivityResult(
         ActivityResultContracts.CreateDocument(MapaFileManager.MIME_TYPE)
     ) { uri: Uri? ->
@@ -32,20 +34,26 @@ class verMapaGuardadoActivity : AppCompatActivity() {
         compartirArchivo(target)
     }
 
+    // =========================
+    // ON CREATE
+    // =========================
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_ver_mapa_guardado)
 
+        // Busca el mapa solicitado en la base de datos.
         val db = DBHelper(this)
         val mapaId = intent.getIntExtra("mapa_id", -1)
         val mapa = db.obtenerMapa(mapaId)
 
+        // Referencias principales de la pantalla.
         val titulo = findViewById<TextView>(R.id.tituloMapa)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val btnEliminar = findViewById<Button>(R.id.btnEliminar)
         val btnExportar = findViewById<Button>(R.id.btnExportar)
         val mapaPreview = findViewById<MapaPreviewView>(R.id.mapaPreview)
 
+        // Si no existe el mapa, muestra aviso y permite volver.
         if (mapa == null) {
             titulo.text = "Mapa no encontrado"
             Toast.makeText(this, "No se encontro el mapa", Toast.LENGTH_SHORT).show()
@@ -53,10 +61,17 @@ class verMapaGuardadoActivity : AppCompatActivity() {
             return
         }
 
+        // Carga ruta y muros para dibujar la vista previa.
         val rutas = db.obtenerRutas(mapa.id)
+        val muroPuntos = db.obtenerMuroPuntos(mapa.id)
         mapaActualId = mapa.id
+        mapaPreview.setMedidasMuros(mapa.oeste, mapa.norte, mapa.sur, mapa.este)
+        mapaPreview.setMostrarMedidas(true)
         mapaPreview.setRuta(rutas, mapa.puertas)
+        mapaPreview.setMedidasMuros(mapa.oeste, mapa.norte, mapa.sur, mapa.este)
+        mapaPreview.setMuroPuntos(muroPuntos)
 
+        // Muestra los datos generales del mapa guardado.
         titulo.text = mapa.nombre
         findViewById<TextView>(R.id.tvOesteGuardado).text = "Oeste\n${"%.1f".format(mapa.oeste)} M"
         findViewById<TextView>(R.id.tvNorteGuardado).text = "Norte\n${"%.1f".format(mapa.norte)} M"
@@ -69,16 +84,19 @@ class verMapaGuardadoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvGrandesGuardados).text = "Obstaculos grandes: ${mapa.grandes}\n"
         findViewById<TextView>(R.id.tvPuertas).text = "Puertas posibles: ${mapa.puertas}\n"
 
+        // Cierra el visor.
         btnBack.setOnClickListener {
             finish()
         }
 
+        // Elimina el mapa actual de la base de datos.
         btnEliminar.setOnClickListener {
             db.eliminarMapa(mapa.id)
             Toast.makeText(this, "Mapa eliminado", Toast.LENGTH_SHORT).show()
             finish()
         }
 
+        // Exporta el mapa con un nombre seguro para archivo.
         btnExportar.setOnClickListener {
             val nombreSeguro = mapa.nombre
                 .replace(Regex("[^A-Za-z0-9_-]"), "_")
@@ -87,6 +105,7 @@ class verMapaGuardadoActivity : AppCompatActivity() {
         }
     }
 
+    // Lanza el dialogo de Android para compartir el archivo exportado.
     private fun compartirArchivo(uri: Uri) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = MapaFileManager.MIME_TYPE

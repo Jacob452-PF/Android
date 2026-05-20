@@ -14,9 +14,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class guardadosActivity : AppCompatActivity() {
 
+    // =========================
+    // ON CREATE
+    // =========================
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Configura pantalla completa y ajusta el contenido a las barras del sistema.
         enableEdgeToEdge()
         setContentView(R.layout.activity_guardados)
 
@@ -26,23 +30,28 @@ class guardadosActivity : AppCompatActivity() {
             insets
         }
 
+        // Referencias principales de la pantalla.
         val btnAgregar = findViewById<ImageView>(R.id.btnAgregar)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         val listaRutas = findViewById<LinearLayout>(R.id.listaRutas)
 
+        // Abre la pantalla para importar un mapa desde archivo.
         btnAgregar.setOnClickListener {
             startActivity(Intent(this, importarMapaActivity::class.java))
         }
 
+        // Carga los mapas guardados al entrar a la pantalla.
         cargarMapas(listaRutas)
 
         bottomNav.selectedItemId = R.id.nav_files
 
+        // Regresa a la pantalla anterior.
         btnBack.setOnClickListener {
             finish()
         }
 
+        // Navegacion inferior entre las secciones principales.
         bottomNav.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.nav_home -> {
@@ -66,14 +75,19 @@ class guardadosActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         val listaRutas = findViewById<LinearLayout>(R.id.listaRutas)
+        // Actualiza la lista por si se importo o elimino un mapa.
         cargarMapas(listaRutas)
     }
 
+    // =========================
+    // CARGAR MAPAS
+    // =========================
     private fun cargarMapas(listaRutas: LinearLayout) {
         listaRutas.removeAllViews()
 
         val mapas = DBHelper(this).obtenerMapasGuardados()
 
+        // Muestra un mensaje cuando aun no hay mapas en la base de datos.
         if (mapas.isEmpty()) {
             val empty = TextView(this).apply {
                 text = "No hay mapas guardados"
@@ -84,6 +98,7 @@ class guardadosActivity : AppCompatActivity() {
             return
         }
 
+        // Crea una tarjeta visual por cada mapa guardado.
         mapas.forEach { mapa ->
             val item = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -120,6 +135,7 @@ class guardadosActivity : AppCompatActivity() {
             }
 
             val detalle = TextView(this).apply {
+                // El detalle resume distancia, puntos de ruta y puertas posibles.
                 text = "${"%.1f".format(mapa.distanciaTotal)} m | Ruta ${DBHelper(this@guardadosActivity).obtenerRutas(mapa.id).size} pts | Puertas ${mapa.puertas}"
                 setTextColor(android.graphics.Color.rgb(191, 223, 255))
                 textSize = 14f
@@ -130,6 +146,7 @@ class guardadosActivity : AppCompatActivity() {
             item.addView(icon)
             item.addView(textos)
 
+            // Abre el visor del mapa seleccionado.
             item.setOnClickListener {
                 val intent = Intent(this, verMapaGuardadoActivity::class.java)
                 intent.putExtra("mapa_id", mapa.id)
@@ -140,6 +157,7 @@ class guardadosActivity : AppCompatActivity() {
         }
     }
 
+    // Convierte dp a pixeles para mantener tamanos consistentes en distintos dispositivos.
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
     }

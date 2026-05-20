@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
@@ -70,6 +71,9 @@ class bluetoothActivity : AppCompatActivity() {
 
     private val CHARACTERISTIC_UUID: UUID =
         UUID.fromString("0000FFE1-0000-1000-8000-00805F9B34FB")
+
+    private val CLIENT_CHARACTERISTIC_CONFIG_UUID: UUID =
+        UUID.fromString("00002902-0000-1000-8000-00805F9B34FB")
 
     // =========================
     // UI
@@ -658,6 +662,7 @@ class bluetoothActivity : AppCompatActivity() {
                 runOnUiThread {
 
                     if (characteristicTX != null) {
+                        activarNotificaciones(gatt, characteristicTX!!)
 
                         Toast.makeText(
                             this@bluetoothActivity,
@@ -681,6 +686,42 @@ class bluetoothActivity : AppCompatActivity() {
 
                 e.printStackTrace()
             }
+        }
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic
+        ) {
+            BluetoothManager.procesarDatoRecibido(characteristic.value ?: return)
+        }
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray
+        ) {
+            BluetoothManager.procesarDatoRecibido(value)
+        }
+    }
+
+    private fun activarNotificaciones(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic
+    ) {
+        try {
+            gatt.setCharacteristicNotification(characteristic, true)
+
+            val descriptor =
+                characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
+
+            if (descriptor != null) {
+                descriptor.value =
+                    BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+
+                gatt.writeDescriptor(descriptor)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
