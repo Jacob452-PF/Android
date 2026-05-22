@@ -620,6 +620,8 @@ class bluetoothActivity : AppCompatActivity() {
                     BluetoothManager.conectado = false
                     BluetoothManager.characteristicTX = null
                     dispositivoPendiente = null
+                    
+                    BluetoothManager.onDesconectado?.invoke()
 
                     Toast.makeText(
                         this@bluetoothActivity,

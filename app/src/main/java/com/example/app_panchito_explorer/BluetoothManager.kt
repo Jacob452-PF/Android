@@ -25,6 +25,9 @@ object BluetoothManager {
 
     private var serialBuffer = StringBuilder()
     var onLineaRecibida: ((String) -> Unit)? = null
+    
+    // Callback para notificar desconexion
+    var onDesconectado: (() -> Unit)? = null
 
     fun enviarDato(mensaje: String): Boolean {
 
@@ -75,6 +78,7 @@ object BluetoothManager {
         bateria = 0
         serialBuffer.clear()
         onLineaRecibida = null
+        onDesconectado = null
     }
 
     fun procesarDatoRecibido(bytes: ByteArray) {

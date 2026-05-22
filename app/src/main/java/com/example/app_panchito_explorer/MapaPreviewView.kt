@@ -72,18 +72,26 @@ class MapaPreviewView @JvmOverloads constructor(
         style = Paint.Style.FILL
     }
 
-    private val textoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.rgb(38, 58, 75)
-        textSize = 24f
+    private val medidaTextoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(0, 80, 160)
+        textSize = 22f
         textAlign = Paint.Align.CENTER
         style = Paint.Style.FILL
+        isFakeBoldText = true
+    }
+
+    private val medidaBordePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        textSize = 22f
+        textAlign = Paint.Align.CENTER
+        style = Paint.Style.STROKE
+        strokeWidth = 5f
+        isFakeBoldText = true
     }
 
     private var puertas = 0
 
     fun setMedidasMuros(oeste: Double, norte: Double, sur: Double, este: Double) {
-        // Se conserva para compatibilidad con pantallas existentes.
-        // El mapa real ya no dibuja un rectangulo N/S/E/O como muro.
         invalidate()
     }
 
@@ -145,26 +153,50 @@ class MapaPreviewView @JvmOverloads constructor(
         val dibujoW = max(1f, width - padding * 2)
         val dibujoH = max(1f, height - padding * 2)
 
-        fun sx(x: Double): Float {
-            return (padding + ((x - minX) / rangoX * dibujoW)).toFloat()
-        }
-
-        fun sy(y: Double): Float {
-            return (height - padding - ((y - minY) / rangoY * dibujoH)).toFloat()
-        }
+        fun sx(x: Double): Float = (padding + ((x - minX) / rangoX * dibujoW)).toFloat()
+        fun sy(y: Double): Float = (height - padding - ((y - minY) / rangoY * dibujoH)).toFloat()
 
         canvas.drawRect(padding, padding, width - padding, height - padding, areaPaint)
         dibujarGrid(canvas, padding)
         dibujarMurosMedidos(canvas, ::sx, ::sy)
 
-        if (ruta.isEmpty()) {
-            return
-        }
+        if (ruta.isEmpty()) return
 
         for (i in 1 until ruta.size) {
             val a = ruta[i - 1]
             val b = ruta[i]
-            canvas.drawLine(sx(a.x), sy(a.y), sx(b.x), sy(b.y), rutaPaint)
+            val x1 = sx(a.x); val y1 = sy(a.y)
+            val x2 = sx(b.x); val y2 = sy(b.y)
+
+            canvas.drawLine(x1, y1, x2, y2, rutaPaint)
+
+            if (mostrarMedidas) {
+                val dxReal = b.x - a.x
+                val dyReal = b.y - a.y
+                val dist = sqrt(dxReal * dxReal + dyReal * dyReal)
+                
+                if (dist > 0.10) { // Solo mostrar tramos > 10cm para no saturar
+                    val midX = (x1 + x2) / 2
+                    val midY = (y1 + y2) / 2
+                    
+                    val angle = Math.toDegrees(Math.atan2((y2 - y1).toDouble(), (x2 - x1).toDouble())).toFloat()
+                    
+                    canvas.save()
+                    canvas.translate(midX, midY)
+                    
+                    // Ajustar ángulo para que el texto nunca esté de cabeza
+                    var textAngle = angle
+                    if (textAngle > 90) textAngle -= 180
+                    else if (textAngle < -90) textAngle += 180
+                    
+                    canvas.rotate(textAngle)
+                    
+                    val label = "${"%.2f".format(dist)}m"
+                    canvas.drawText(label, 0f, -10f, medidaBordePaint)
+                    canvas.drawText(label, 0f, -10f, medidaTextoPaint)
+                    canvas.restore()
+                }
+            }
         }
 
         val inicio = ruta.first()
@@ -180,49 +212,25 @@ class MapaPreviewView @JvmOverloads constructor(
         }
     }
 
-    private fun dibujarMurosMedidos(
-        canvas: Canvas,
-        sx: (Double) -> Float,
-        sy: (Double) -> Float
-    ) {
-        if (muroPuntos.isEmpty()) {
-            return
-        }
-
-        muroPuntos
-            .groupBy { it.grupo }
-            .values
-            .forEach { grupo ->
-                for (i in 1 until grupo.size) {
-                    val a = grupo[i - 1]
-                    val b = grupo[i]
-                    val distancia =
-                        sqrt(((b.x - a.x) * (b.x - a.x)) + ((b.y - a.y) * (b.y - a.y)))
-
-                    if (distancia <= MAX_LINEA_MURO_M) {
-                        canvas.drawLine(sx(a.x), sy(a.y), sx(b.x), sy(b.y), muroPaint)
-                    }
-                }
+    private fun dibujarMurosMedidos(canvas: Canvas, sx: (Double) -> Float, sy: (Double) -> Float) {
+        if (muroPuntos.isEmpty()) return
+        muroPuntos.groupBy { it.grupo }.values.forEach { grupo ->
+            for (i in 1 until grupo.size) {
+                val a = grupo[i - 1]; val b = grupo[i]
+                val d = sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y))
+                if (d <= MAX_LINEA_MURO_M) canvas.drawLine(sx(a.x), sy(a.y), sx(b.x), sy(b.y), muroPaint)
             }
-
-        muroPuntos.forEach { punto ->
-            canvas.drawCircle(sx(punto.x), sy(punto.y), 4.5f, muroPuntoPaint)
         }
+        muroPuntos.forEach { canvas.drawCircle(sx(it.x), sy(it.y), 4.5f, muroPuntoPaint) }
     }
 
     private fun dibujarGrid(canvas: Canvas, padding: Float) {
-        val columnas = 4
-        val filas = 4
-        val ancho = width - padding * 2
-        val alto = height - padding * 2
-
-        for (i in 1 until columnas) {
-            val x = padding + ancho * i / columnas
+        val div = 4
+        val w = width - padding * 2; val h = height - padding * 2
+        for (i in 1 until div) {
+            val x = padding + w * i / div
             canvas.drawLine(x, padding, x, height - padding, gridPaint)
-        }
-
-        for (i in 1 until filas) {
-            val y = padding + alto * i / filas
+            val y = padding + h * i / div
             canvas.drawLine(padding, y, width - padding, y, gridPaint)
         }
     }
