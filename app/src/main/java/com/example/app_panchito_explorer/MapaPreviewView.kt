@@ -4,8 +4,10 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -101,6 +103,19 @@ class MapaPreviewView @JvmOverloads constructor(
         isFakeBoldText = true
     }
 
+    private val anguloFondoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(215, 255, 255, 255)
+        style = Paint.Style.FILL
+    }
+
+    private val anguloTextoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.rgb(20, 70, 120)
+        textSize = 20f
+        textAlign = Paint.Align.CENTER
+        style = Paint.Style.FILL
+        isFakeBoldText = true
+    }
+
     fun setMedidasMuros(oeste: Double, norte: Double, sur: Double, este: Double) {
         invalidate()
     }
@@ -183,16 +198,18 @@ class MapaPreviewView @JvmOverloads constructor(
 
                 if (mostrarMedidas) {
                     val distCm = sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y))
+                    val midX = (x1 + x2) / 2
+                    val midY = (y1 + y2) / 2
                     if (distCm > 5.0) {
-                        val midX = (x1 + x2) / 2; val midY = (y1 + y2) / 2
                         val angle = Math.toDegrees(Math.atan2((y2 - y1).toDouble(), (x2 - x1).toDouble())).toFloat()
                         canvas.save()
                         canvas.translate(midX, midY)
                         canvas.rotate(if (angle > 90 || angle < -90) angle + 180 else angle)
-                        canvas.drawText("${distCm.toInt()}cm", 0f, -10f, medidaBordePaint)
-                        canvas.drawText("${distCm.toInt()}cm", 0f, -10f, medidaTextoPaint)
+                        canvas.drawText("${distCm.toInt()}cm", 0f, -16f, medidaBordePaint)
+                        canvas.drawText("${distCm.toInt()}cm", 0f, -16f, medidaTextoPaint)
                         canvas.restore()
                     }
+                    dibujarEtiqueta(canvas, etiquetaAngulo(b.angulo), midX, midY + 18f)
                 }
             }
 
@@ -207,7 +224,51 @@ class MapaPreviewView @JvmOverloads constructor(
                 val punto = ruta[(ruta.size - 1 - i).coerceAtLeast(0)]
                 canvas.drawCircle(sx(punto.x), sy(punto.y), 7f, puertaPaint)
             }
+
+            if (mostrarMedidas) {
+                dibujarAngulosEnQuiebres(canvas, ::sx, ::sy)
+            }
         }
+    }
+
+    private fun dibujarAngulosEnQuiebres(canvas: Canvas, sx: (Double) -> Float, sy: (Double) -> Float) {
+        ruta.forEachIndexed { index, punto ->
+            if (index == 0) return@forEachIndexed
+            val anterior = ruta[index - 1]
+            val esPuntoDeGiro = distanciaEntre(anterior, punto) <= 2.0 ||
+                abs(normalizarAngulo(punto.angulo) - normalizarAngulo(anterior.angulo)) >= 5.0
+            if (esPuntoDeGiro) {
+                canvas.drawCircle(sx(punto.x), sy(punto.y), 6f, puntoPaint)
+                dibujarEtiqueta(canvas, etiquetaAngulo(punto.angulo), sx(punto.x), sy(punto.y) - 18f)
+            }
+        }
+    }
+
+    private fun dibujarEtiqueta(canvas: Canvas, texto: String, x: Float, y: Float) {
+        val paddingX = 8f
+        val paddingY = 5f
+        val widthText = anguloTextoPaint.measureText(texto)
+        val font = anguloTextoPaint.fontMetrics
+        val rect = RectF(
+            x - widthText / 2 - paddingX,
+            y + font.ascent - paddingY,
+            x + widthText / 2 + paddingX,
+            y + font.descent + paddingY
+        )
+        canvas.drawRoundRect(rect, 8f, 8f, anguloFondoPaint)
+        canvas.drawText(texto, x, y, anguloTextoPaint)
+    }
+
+    private fun distanciaEntre(a: RutaPunto, b: RutaPunto): Double {
+        return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y))
+    }
+
+    private fun etiquetaAngulo(angulo: Double): String {
+        return "${normalizarAngulo(angulo).toInt()}°"
+    }
+
+    private fun normalizarAngulo(angulo: Double): Double {
+        return ((angulo % 360.0) + 360.0) % 360.0
     }
 
     private fun dibujarMurosMedidos(canvas: Canvas, sx: (Double) -> Float, sy: (Double) -> Float) {

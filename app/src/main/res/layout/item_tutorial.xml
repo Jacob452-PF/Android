@@ -33,7 +33,7 @@
         android:padding="18dp"
         android:orientation="vertical"
         android:background="@drawable/card_bg">
-
+4
         <!-- DESCRIPCIÓN -->
         <TextView
             android:id="@+id/descripcion"

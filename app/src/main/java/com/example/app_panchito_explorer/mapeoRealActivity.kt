@@ -138,9 +138,10 @@ class mapeoRealActivity : AppCompatActivity() {
         val btnMedirModo = findViewById<LinearLayout>(R.id.btnMedirModo)
         val btnAutoModo = findViewById<LinearLayout>(R.id.btnAutoModo)
         val btnDetectarModo = findViewById<LinearLayout>(R.id.btnDetectarModo)
+        val btnReiniciarMapa = findViewById<LinearLayout>(R.id.btnReiniciarMapa)
         val panelVelocidad = findViewById<LinearLayout>(R.id.panelVelocidad)
 
-        botonesActivos.addAll(listOf(btnUp, btnDown, btnLeft, btnRight, btnStop, btnIniciarSesion, btnMedirModo, btnAutoModo, btnDetectarModo))
+        botonesActivos.addAll(listOf(btnUp, btnDown, btnLeft, btnRight, btnStop, btnIniciarSesion, btnMedirModo, btnAutoModo, btnDetectarModo, btnReiniciarMapa))
 
         BluetoothManager.onDesconectado = {
             if (mapeoActivo) {
@@ -215,6 +216,10 @@ class mapeoRealActivity : AppCompatActivity() {
         configurarBotonMovimiento(btnRight, "R")
         
         btnStop.setOnClickListener { detenerMovimientoManual(); detenerMovimientoAuto(); pausarMapeo(it); enviarComando("S") }
+
+        btnReiniciarMapa.setOnClickListener {
+            confirmarReinicioMapa()
+        }
 
         btnGuardar.setOnClickListener {
             actualizarTiempoMapeo()
@@ -419,8 +424,11 @@ class mapeoRealActivity : AppCompatActivity() {
     }
 
     private fun detenerMovimientoManual(enviarStop: Boolean = true) {
-        if (comandoMovimientoActivo == null) return
-        actualizarMovimientoManual(comandoMovimientoActivo!!)
+        val comando = comandoMovimientoActivo ?: return
+        actualizarMovimientoManual(comando)
+        if (comando == "L" || comando == "R") {
+            registrarCambioDireccion("manual")
+        }
         comandoMovimientoActivo = null; movimientoHandler.removeCallbacks(movimientoRunnable)
         botonMovimientoActivo = null; if (enviarStop) enviarComando("S")
         actualizarEstadosBotones()
@@ -481,9 +489,15 @@ class mapeoRealActivity : AppCompatActivity() {
 
     private fun registrarCambioDireccion(modo: String) {
         if (!mapeoActivo) return
-        val punto = "${ordenRuta++},$posX,$posY,$modo,${anguloActual()}"
-        if (rutaManual.lastOrNull() != punto) {
-            rutaManual.add(punto)
+        val ultimoPunto = rutaManual.lastOrNull()?.let { parsearRutaTexto(it) }
+        val nuevoAngulo = anguloActual()
+        val yaRegistrado = ultimoPunto != null &&
+            Math.abs(ultimoPunto.x - posX) <= 0.5 &&
+            Math.abs(ultimoPunto.y - posY) <= 0.5 &&
+            Math.abs(ultimoPunto.angulo - nuevoAngulo) <= 0.5
+
+        if (!yaRegistrado) {
+            rutaManual.add("${ordenRuta++},$posX,$posY,$modo,$nuevoAngulo")
             iniciandoTramo = true
             mapaPreview.setRutaDesdeTexto(rutaManual, puertasDetectadas)
         }
@@ -518,6 +532,36 @@ class mapeoRealActivity : AppCompatActivity() {
         muroPuntos.clear(); obstaculoPuntos.clear()
         mapaPreview.setRutaDesdeTexto(rutaManual, 0); mapaPreview.setMuroPuntos(muroPuntos)
         mapaPreview.setObstaculos(obstaculoPuntos); actualizarUI()
+    }
+
+    private fun confirmarReinicioMapa() {
+        AlertDialog.Builder(this)
+            .setTitle("Reiniciar mapa")
+            .setMessage("Se borrara el recorrido actual y empezara desde cero.")
+            .setPositiveButton("Reiniciar") { _, _ -> reiniciarMapaDesdeCero() }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun reiniciarMapaDesdeCero() {
+        detenerMovimientoManual()
+        detenerMovimientoAuto()
+        enviarComando("S")
+        mapeoActivo = false
+        modoManual = true
+        modoAuto = false
+        modoDetectar = false
+        escaneoConstruyeMapa = false
+        movimientoBloqueadoPorMuro = false
+        botonMovimientoActivo = null
+        obstaculosPequenos = 0
+        obstaculosGrandes = 0
+        puertasDetectadas = 0
+        tiempoSegundos = 0
+        tiempoAcumuladoMs = 0L
+        tiempoInicioMs = System.currentTimeMillis()
+        reiniciarMapa()
+        actualizarEstadosBotones()
     }
 
     private fun iniciarCronometro() {
