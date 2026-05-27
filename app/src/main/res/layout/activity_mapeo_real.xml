@@ -158,6 +158,17 @@
                 android:textColor="#FFFFFF"
                 android:gravity="center"
                 android:layout_marginStart="5dp"/>
+
+            <TextView
+                android:id="@+id/tvAngulo"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="Angulo\n0°"
+                android:background="@drawable/bg_card"
+                android:textColor="#FFFFFF"
+                android:gravity="center"
+                android:layout_marginStart="5dp"/>
         </LinearLayout>
 
         <LinearLayout

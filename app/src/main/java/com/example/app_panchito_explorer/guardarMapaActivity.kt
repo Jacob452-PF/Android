@@ -84,10 +84,11 @@ class guardarMapaActivity : AppCompatActivity() {
                 val orden = partes[0].toIntOrNull() ?: 0
                 val xCm = (partes[1].toDoubleOrNull() ?: 0.0) * 100.0
                 val yCm = (partes[2].toDoubleOrNull() ?: 0.0) * 100.0
-                "$orden,$xCm,$yCm,${partes[3]}"
+                "$orden,$xCm,$yCm,${partes[3]},${partes.getOrNull(4)?.toDoubleOrNull() ?: 0.0}"
             }
         }
-        val puntosAuto = rutaManual.count { it.endsWith(",auto") }
+        val puntosAuto = rutaManual.count { it.split(",").getOrNull(3).equals("auto", ignoreCase = true) }
+        val angulosRegistrados = rutaManual.mapNotNull { it.split(",").getOrNull(4)?.toDoubleOrNull() }.distinct().size
         val area = (oeste + este) * (norte + sur)
         val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
         editNombreMapa.setText("Mapa $fecha")
@@ -116,7 +117,7 @@ class guardarMapaActivity : AppCompatActivity() {
         btnGuardar.setOnClickListener {
             val db = DBHelper(this)
             val nombre = editNombreMapa.text.toString().trim().ifBlank { "Mapa $fecha" }
-            val descripcion = "Recorrido: ${rutaManual.size} puntos | Auto: $puntosAuto"
+            val descripcion = "Recorrido: ${rutaManual.size} puntos | Auto: $puntosAuto | Giros: $angulosRegistrados"
 
             val mapaId = db.insertarMapa(
                 nombre = nombre,
@@ -161,7 +162,8 @@ class guardarMapaActivity : AppCompatActivity() {
                         orden = partes[0].toIntOrNull() ?: 0,
                         x = partes[1].toDoubleOrNull() ?: 0.0,
                         y = partes[2].toDoubleOrNull() ?: 0.0,
-                        modo = partes[3]
+                        modo = partes[3],
+                        angulo = partes.getOrNull(4)?.toDoubleOrNull() ?: 0.0
                     )
                 }
             }

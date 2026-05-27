@@ -67,6 +67,7 @@ class mapeoRealActivity : AppCompatActivity() {
     private lateinit var tvTiempo: TextView
     private lateinit var tvDistancia: TextView
     private lateinit var tvBateria: TextView
+    private lateinit var tvAngulo: TextView
     private lateinit var tvPequenos: TextView
     private lateinit var tvGrandes: TextView
     private lateinit var tvVelocidadNumero: TextView
@@ -120,6 +121,7 @@ class mapeoRealActivity : AppCompatActivity() {
         tvTiempo = findViewById(R.id.tvTiempo)
         tvDistancia = findViewById(R.id.tvDistancia)
         tvBateria = findViewById(R.id.tvBateria)
+        tvAngulo = findViewById(R.id.tvAngulo)
         tvPequenos = findViewById(R.id.tvPequenos)
         tvGrandes = findViewById(R.id.tvGrandes)
         tvVelocidadNumero = findViewById(R.id.tvVelocidadNumero)
@@ -228,7 +230,7 @@ class mapeoRealActivity : AppCompatActivity() {
             intent.putExtra("puertas", puertasDetectadas)
             intent.putStringArrayListExtra("ruta_manual", ArrayList(rutaManual.map { 
                 val p = parsearRutaTexto(it)
-                if (p != null) "${p.orden},${p.x/100.0},${p.y/100.0},${p.modo}" else it
+                if (p != null) "${p.orden},${p.x/100.0},${p.y/100.0},${p.modo},${p.angulo}" else it
             }))
             intent.putStringArrayListExtra("muro_puntos", ArrayList(muroPuntos.map { "${it.x / 100.0},${it.y / 100.0},${it.grupo}" }))
             startActivity(intent)
@@ -382,7 +384,13 @@ class mapeoRealActivity : AppCompatActivity() {
 
     private fun parsearRutaTexto(txt: String): RutaPunto? {
         val p = txt.split(","); if(p.size < 4) return null
-        return RutaPunto(p[0].toIntOrNull()?:0, p[1].toDoubleOrNull()?:0.0, p[2].toDoubleOrNull()?:0.0, p[3])
+        return RutaPunto(
+            p[0].toIntOrNull() ?: 0,
+            p[1].toDoubleOrNull() ?: 0.0,
+            p[2].toDoubleOrNull() ?: 0.0,
+            p[3],
+            p.getOrNull(4)?.toDoubleOrNull() ?: 0.0
+        )
     }
 
     private fun configurarBotonMovimiento(boton: ImageButton, comando: String) {
@@ -403,7 +411,9 @@ class mapeoRealActivity : AppCompatActivity() {
     private fun iniciarMovimientoManual(boton: View, comando: String) {
         if (comandoMovimientoActivo == comando) return
         movimientoBloqueadoPorMuro = false
-        detenerMovimientoManual(false); botonMovimientoActivo = boton; comandoMovimientoActivo = comando
+        detenerMovimientoManual(false)
+        registrarCambioDireccion("manual")
+        botonMovimientoActivo = boton; comandoMovimientoActivo = comando
         ultimoTickMovimiento = System.currentTimeMillis(); modoManual = true
         enviarComando(comando); actualizarEstadosBotones(); movimientoHandler.post(movimientoRunnable)
     }
@@ -424,6 +434,7 @@ class mapeoRealActivity : AppCompatActivity() {
         if (comandoAnterior != null && comandoAnterior != comando) {
             iniciandoTramo = true
         }
+        registrarCambioDireccion("auto")
         comandoAutoActivo = comando
         ultimoTickAuto = System.currentTimeMillis()
         autoMovimientoHandler.post(autoMovimientoRunnable)
@@ -445,8 +456,8 @@ class mapeoRealActivity : AppCompatActivity() {
         when (comando) {
             "F" -> registrarPasoManual(distanciaPorSegundoActual() * dt)
             "B" -> registrarPasoManual(-distanciaPorSegundoActual() * dt)
-            "L" -> { headingGrados = (headingGrados - 180 * dt).mod(360.0) }
-            "R" -> { headingGrados = (headingGrados + 180 * dt).mod(360.0) }
+            "L" -> { headingGrados = (headingGrados - 180 * dt).mod(360.0); actualizarUI() }
+            "R" -> { headingGrados = (headingGrados + 180 * dt).mod(360.0); actualizarUI() }
         }
     }
 
@@ -458,8 +469,8 @@ class mapeoRealActivity : AppCompatActivity() {
         when (comando) {
             "F" -> registrarPaso("auto", distanciaPorSegundoActual() * dt, actualizarMedidas = true)
             "B" -> registrarPaso("auto", -distanciaPorSegundoActual() * dt, actualizarMedidas = true)
-            "L" -> headingGrados = (headingGrados - 180 * dt).mod(360.0)
-            "R" -> headingGrados = (headingGrados + 180 * dt).mod(360.0)
+            "L" -> { headingGrados = (headingGrados - 180 * dt).mod(360.0); actualizarUI() }
+            "R" -> { headingGrados = (headingGrados + 180 * dt).mod(360.0); actualizarUI() }
         }
     }
 
@@ -468,17 +479,28 @@ class mapeoRealActivity : AppCompatActivity() {
         registrarPaso("manual", distancia, escaneoConstruyeMapa)
     }
 
+    private fun registrarCambioDireccion(modo: String) {
+        if (!mapeoActivo) return
+        val punto = "${ordenRuta++},$posX,$posY,$modo,${anguloActual()}"
+        if (rutaManual.lastOrNull() != punto) {
+            rutaManual.add(punto)
+            iniciandoTramo = true
+            mapaPreview.setRutaDesdeTexto(rutaManual, puertasDetectadas)
+        }
+        actualizarUI()
+    }
+
     private fun registrarPaso(modo: String, distancia: Double, actualizarMedidas: Boolean) {
         distanciaTotal += Math.abs(distancia)
         posX += sin(Math.toRadians(headingGrados)) * distancia
         posY += cos(Math.toRadians(headingGrados)) * distancia
         if (actualizarMedidas) actualizarLimitesDesdePunto(posX, posY)
         if (iniciandoTramo || rutaManual.isEmpty()) {
-            rutaManual.add("${ordenRuta++},$posX,$posY,$modo"); iniciandoTramo = false
+            rutaManual.add("${ordenRuta++},$posX,$posY,$modo,${anguloActual()}"); iniciandoTramo = false
         } else {
             val last = rutaManual.size - 1
             val id = rutaManual[last].split(",")[0]
-            rutaManual[last] = "$id,$posX,$posY,$modo"
+            rutaManual[last] = "$id,$posX,$posY,$modo,${anguloActual()}"
         }
         mapaPreview.setRutaDesdeTexto(rutaManual, puertasDetectadas); actualizarUI()
     }
@@ -492,7 +514,7 @@ class mapeoRealActivity : AppCompatActivity() {
         oeste = 0.0; norte = 0.0; sur = 0.0; este = 0.0; distanciaTotal = 0.0
         headingGrados = 0.0; posX = 0.0; posY = 0.0; ordenRuta = 0
         iniciandoTramo = true
-        rutaManual.clear(); rutaManual.add("${ordenRuta++},0.0,0.0,inicio")
+        rutaManual.clear(); rutaManual.add("${ordenRuta++},0.0,0.0,inicio,${anguloActual()}")
         muroPuntos.clear(); obstaculoPuntos.clear()
         mapaPreview.setRutaDesdeTexto(rutaManual, 0); mapaPreview.setMuroPuntos(muroPuntos)
         mapaPreview.setObstaculos(obstaculoPuntos); actualizarUI()
@@ -527,6 +549,7 @@ class mapeoRealActivity : AppCompatActivity() {
         val segundos = tiempoSegundos % 60
         tvTiempo.text = "Tiempo\n%02d:%02d".format(minutos, segundos)
         tvBateria.text = if (bateria > 0) "Bateria\n$bateria%" else "Bateria\n--"
+        tvAngulo.text = "Angulo\n${anguloActual().toInt()}°"
         tvOeste.text = "Oeste\n${oeste.toInt()} cm"; tvNorte.text = "Norte\n${norte.toInt()} cm"
         tvSur.text = "Sur\n${sur.toInt()} cm"; tvEste.text = "Este\n${este.toInt()} cm"
         tvDistancia.text = "Distancia\n${distanciaTotal.toInt()} cm"; tvVelocidadNumero.text = velocidadNivel.toString()
@@ -576,6 +599,8 @@ class mapeoRealActivity : AppCompatActivity() {
 
     // Retorna CENTÍMETROS por segundo. Calibrado: 1.80m / 5s = 36cm/s en L3
     private fun distanciaPorSegundoActual(): Double = when (velocidadNivel) { 1 -> 12.0; 2 -> 24.0; else -> 36.0 }
+
+    private fun anguloActual(): Double = ((headingGrados % 360.0) + 360.0) % 360.0
 
     override fun onResume() {
         super.onResume()

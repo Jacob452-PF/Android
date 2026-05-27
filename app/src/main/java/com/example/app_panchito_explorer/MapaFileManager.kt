@@ -39,6 +39,7 @@ object MapaFileManager {
                     .put("x", punto.x)
                     .put("y", punto.y)
                     .put("modo", punto.modo)
+                    .put("angulo", punto.angulo)
             )
         }
         json.put("ruta", rutasJson)
@@ -106,7 +107,8 @@ object MapaFileManager {
                 orden = punto.optInt("orden", i),
                 x = punto.optDouble("x", 0.0),
                 y = punto.optDouble("y", 0.0),
-                modo = punto.optString("modo", "manual")
+                modo = punto.optString("modo", "manual"),
+                angulo = punto.optDouble("angulo", 0.0)
             )
         }
 

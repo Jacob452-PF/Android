@@ -24,7 +24,8 @@ data class RutaPunto(
     val orden: Int,
     val x: Double,
     val y: Double,
-    val modo: String
+    val modo: String,
+    val angulo: Double = 0.0
 )
 
 data class PuertaGuardada(
@@ -36,7 +37,7 @@ data class PuertaGuardada(
 )
 
 class DBHelper(context: Context) :
-    SQLiteOpenHelper(context, "panchito.db", null, 4) {
+    SQLiteOpenHelper(context, "panchito.db", null, 5) {
 
     override fun onCreate(db: SQLiteDatabase) {
         crearTablas(db)
@@ -45,9 +46,12 @@ class DBHelper(context: Context) :
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 3) {
             crearTablaMuroPuntos(db)
-            return
-        } else if (oldVersion < 4) {
+        }
+        if (oldVersion in 3 until 4) {
             db.execSQL("ALTER TABLE muro_puntos ADD COLUMN grupo INTEGER DEFAULT 0")
+        }
+        if (oldVersion < 5) {
+            db.execSQL("ALTER TABLE rutas ADD COLUMN angulo REAL DEFAULT 0")
             return
         }
 
@@ -121,7 +125,8 @@ class DBHelper(context: Context) :
                 orden INTEGER,
                 x REAL,
                 y REAL,
-                modo TEXT
+                modo TEXT,
+                angulo REAL DEFAULT 0
             )
         """)
 
@@ -253,13 +258,14 @@ class DBHelper(context: Context) :
         return writableDatabase.insert("obstaculos", null, values)
     }
 
-    fun insertarRutaPunto(mapaId: Int, orden: Int, x: Double, y: Double, modo: String): Long {
+    fun insertarRutaPunto(mapaId: Int, orden: Int, x: Double, y: Double, modo: String, angulo: Double = 0.0): Long {
         val values = ContentValues().apply {
             put("mapa_id", mapaId)
             put("orden", orden)
             put("x", x)
             put("y", y)
             put("modo", modo)
+            put("angulo", angulo)
         }
         return writableDatabase.insert("rutas", null, values)
     }
@@ -338,7 +344,7 @@ class DBHelper(context: Context) :
     fun obtenerRutas(mapaId: Int): List<RutaPunto> {
         val lista = mutableListOf<RutaPunto>()
         val cursor = readableDatabase.rawQuery(
-            "SELECT orden,x,y,modo FROM rutas WHERE mapa_id=? ORDER BY orden",
+            "SELECT orden,x,y,modo,angulo FROM rutas WHERE mapa_id=? ORDER BY orden",
             arrayOf(mapaId.toString())
         )
 
@@ -349,7 +355,8 @@ class DBHelper(context: Context) :
                         orden = it.getInt(0),
                         x = it.getDouble(1),
                         y = it.getDouble(2),
-                        modo = it.getString(3)
+                        modo = it.getString(3),
+                        angulo = it.getDouble(4)
                     )
                 )
             }

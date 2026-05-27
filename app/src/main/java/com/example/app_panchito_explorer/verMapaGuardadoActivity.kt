@@ -69,7 +69,8 @@ class verMapaGuardadoActivity : AppCompatActivity() {
                 orden = punto.orden,
                 x = punto.x * 100.0,
                 y = punto.y * 100.0,
-                modo = punto.modo
+                modo = punto.modo,
+                angulo = punto.angulo
             )
         }
         val muroPuntosPreview = muroPuntos.map { punto ->

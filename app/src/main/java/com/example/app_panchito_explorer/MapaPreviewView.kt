@@ -133,7 +133,13 @@ class MapaPreviewView @JvmOverloads constructor(
         val convertidos = puntos.mapNotNull { punto ->
             val partes = punto.split(",")
             if (partes.size < 4) null
-            else RutaPunto(partes[0].toIntOrNull() ?: 0, partes[1].toDoubleOrNull() ?: 0.0, partes[2].toDoubleOrNull() ?: 0.0, partes[3])
+            else RutaPunto(
+                partes[0].toIntOrNull() ?: 0,
+                partes[1].toDoubleOrNull() ?: 0.0,
+                partes[2].toDoubleOrNull() ?: 0.0,
+                partes[3],
+                partes.getOrNull(4)?.toDoubleOrNull() ?: 0.0
+            )
         }
         setRuta(convertidos, puertasPosibles)
     }
