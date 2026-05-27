@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="#0A2A4A">
 
-    <!-- HEADER -->
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="0dp"
@@ -30,13 +29,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Ruta Existente"
+            android:text="Importar mapa"
             android:textColor="#FFF"
             android:textSize="18sp"
             android:gravity="center"/>
     </LinearLayout>
 
-    <!-- SUBIR IMAGEN -->
     <LinearLayout
         android:id="@+id/subirMapa"
         android:layout_width="0dp"
@@ -45,6 +43,8 @@
         android:gravity="center"
         android:background="@drawable/bg_card"
         android:layout_margin="16dp"
+        android:clickable="true"
+        android:focusable="true"
         app:layout_constraintTop_toBottomOf="@id/header"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -55,23 +55,24 @@
             android:src="@drawable/ic_files"/>
 
         <TextView
-            android:text="Subir mapa de ruta"
-            android:textColor="#FFF"
-            android:textStyle="bold"
+            android:id="@+id/tvTituloArchivo"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-             android:layout_width="wrap_content"/>
+            android:text="Seleccionar archivo"
+            android:textColor="#FFF"
+            android:textStyle="bold"/>
 
         <TextView
-            android:text="Toca para seleccionar la imagen"
-            android:textColor="#BFDFFF"
-            android:textSize="12sp"
+            android:id="@+id/tvSubtituloArchivo"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"/>
+            android:text="Toca para elegir un archivo .panchitomap"
+            android:textColor="#BFDFFF"
+            android:textSize="12sp"/>
     </LinearLayout>
 
-    <!-- OPCIONES -->
     <LinearLayout
-        android:id="@+id/opciones"
+        android:id="@+id/datosArchivo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -81,85 +82,66 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
-            android:text="Obstaculos Detectados"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Datos del archivo"
             android:textColor="#FFF"
             android:textStyle="bold"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="10dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-             android:layout_width="wrap_content"/>
-
-        <!-- MEDIR -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="70dp"
             android:background="@drawable/bg_card"
-            android:padding="12dp"
-            android:gravity="center_vertical">
+            android:padding="14dp"
+            android:orientation="vertical">
 
             <TextView
+                android:id="@+id/tvNombreMapa"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:text="Medir"
+                android:text="Nombre: --"
                 android:textColor="#FFF"
                 android:textSize="16sp"/>
 
-            <Switch
-                android:id="@+id/switchMedir"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-
-        </LinearLayout>
-
-        <!-- TRAZAR -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="70dp"
-            android:background="@drawable/bg_card"
-            android:padding="12dp"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical">
+            <TextView
+                android:id="@+id/tvDistanciaMapa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Distancia: --"
+                android:textColor="#BFDFFF"
+                android:textSize="14sp"/>
 
             <TextView
+                android:id="@+id/tvTiempoMapa"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:text="Trazar rutas"
-                android:textColor="#FFF"
-                android:textSize="16sp"/>
-
-            <Switch
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:id="@+id/switchTrazar"/>
-        </LinearLayout>
-
-        <!-- DETECTAR -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="70dp"
-            android:background="@drawable/bg_card"
-            android:padding="12dp"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical">
+                android:layout_marginTop="6dp"
+                android:text="Tiempo: --"
+                android:textColor="#BFDFFF"
+                android:textSize="14sp"/>
 
             <TextView
+                android:id="@+id/tvRutaMapa"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_weight="1"
-                android:text="Detectar obstaculos"
-                android:textColor="#FFF"
-                android:textSize="16sp"/>
+                android:layout_marginTop="6dp"
+                android:text="Recorrido: --"
+                android:textColor="#BFDFFF"
+                android:textSize="14sp"/>
 
-            <Switch
+            <TextView
+                android:id="@+id/tvPuertasMapa"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:id="@+id/switchDetectar"/>
+                android:layout_marginTop="6dp"
+                android:text="Puertas: --"
+                android:textColor="#BFDFFF"
+                android:textSize="14sp"/>
         </LinearLayout>
-
     </LinearLayout>
 
-    <!-- BOTONES -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="70dp"
@@ -183,11 +165,10 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="Iniciar"
+            android:text="Confirmar"
             android:layout_marginStart="10dp"
             android:background="@drawable/btn_iniciar"
             android:textColor="#FFF"/>
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

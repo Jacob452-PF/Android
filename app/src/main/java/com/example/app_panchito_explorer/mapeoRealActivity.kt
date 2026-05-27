@@ -146,7 +146,6 @@ class mapeoRealActivity : AppCompatActivity() {
                     if (!isFinishing) {
                         detenerMovimientoManual(enviarStop = false)
                         detenerMovimientoAuto()
-                        pausarCronometro()
                         mapeoActivo = false
                         modoAuto = false
                         modoDetectar = false
@@ -167,7 +166,6 @@ class mapeoRealActivity : AppCompatActivity() {
                 enviarComando("I")
                 enviarComando(velocidadNivel.toString())
             }
-            if (mapeoActivo) iniciarCronometro() else pausarCronometro()
             actualizarEstadosBotones()
         }
 
@@ -217,6 +215,7 @@ class mapeoRealActivity : AppCompatActivity() {
         btnStop.setOnClickListener { detenerMovimientoManual(); detenerMovimientoAuto(); pausarMapeo(it); enviarComando("S") }
 
         btnGuardar.setOnClickListener {
+            actualizarTiempoMapeo()
             val intent = Intent(this, guardarMapaActivity::class.java)
             // Convertimos cm de vuelta a metros solo para el guardado si es necesario, 
             // o lo guardamos como cm. Asumiremos que el resto de la app espera metros.
@@ -240,6 +239,7 @@ class mapeoRealActivity : AppCompatActivity() {
 
         BluetoothManager.onLineaRecibida = { linea -> runOnUiThread { procesarLineaBluetooth(linea) } }
 
+        iniciarCronometro()
         actualizarEstadosBotones(); actualizarUI()
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -490,7 +490,6 @@ class mapeoRealActivity : AppCompatActivity() {
 
     private fun reiniciarMapa() {
         oeste = 0.0; norte = 0.0; sur = 0.0; este = 0.0; distanciaTotal = 0.0
-        tiempoSegundos = 0; tiempoAcumuladoMs = 0L; tiempoInicioMs = System.currentTimeMillis()
         headingGrados = 0.0; posX = 0.0; posY = 0.0; ordenRuta = 0
         iniciandoTramo = true
         rutaManual.clear(); rutaManual.add("${ordenRuta++},0.0,0.0,inicio")
@@ -539,7 +538,6 @@ class mapeoRealActivity : AppCompatActivity() {
         detenerMovimientoAuto()
         mapeoActivo = false; modoAuto = false; modoDetectar = false
         comandoMovimientoActivo = null; movimientoHandler.removeCallbacks(movimientoRunnable)
-        pausarCronometro()
         botonMovimientoActivo = boton; actualizarEstadosBotones()
     }
 
@@ -578,6 +576,11 @@ class mapeoRealActivity : AppCompatActivity() {
 
     // Retorna CENTÍMETROS por segundo. Calibrado: 1.80m / 5s = 36cm/s en L3
     private fun distanciaPorSegundoActual(): Double = when (velocidadNivel) { 1 -> 12.0; 2 -> 24.0; else -> 36.0 }
+
+    override fun onResume() {
+        super.onResume()
+        if (::tvTiempo.isInitialized) iniciarCronometro()
+    }
 
     override fun onPause() {
         detenerMovimientoManual()
