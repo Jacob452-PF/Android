@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -35,14 +36,21 @@ class guardadosActivity : AppCompatActivity() {
 
         // Referencias principales de la pantalla.
         val btnAgregar = findViewById<ImageView>(R.id.btnAgregar)
+        val btnRecargar = findViewById<ImageView>(R.id.btnRecargar)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         val listaRutas = findViewById<LinearLayout>(R.id.listaRutas)
+        val scrollMapas = findViewById<ScrollView>(R.id.scrollMapas)
         val editBuscarMapa = findViewById<EditText>(R.id.editBuscarMapa)
 
         // Abre la pantalla para importar un mapa desde archivo.
         btnAgregar.setOnClickListener {
             startActivity(Intent(this, importarMapaActivity::class.java))
+        }
+
+        btnRecargar.setOnClickListener {
+            cargarMapas(listaRutas, editBuscarMapa.text.toString())
+            scrollMapas.post { scrollMapas.smoothScrollTo(0, 0) }
         }
 
         // Carga los mapas guardados al entrar a la pantalla.

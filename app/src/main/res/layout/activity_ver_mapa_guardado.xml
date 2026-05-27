@@ -95,6 +95,17 @@
             android:gravity="center"
             android:layout_gravity="bottom|end"/>
 
+        <Button
+            android:id="@+id/btnSalirPantallaCompleta"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="top|end"
+            android:layout_margin="12dp"
+            android:background="@drawable/btn_iniciar"
+            android:text="Salir"
+            android:textColor="#FFF"
+            android:visibility="gone"/>
+
     </FrameLayout>
 
     <LinearLayout
@@ -126,9 +137,20 @@
             android:background="@drawable/btn_iniciar"
             android:textColor="#FFF"/>
 
+        <Button
+            android:id="@+id/btnPantallaCompleta"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Pantalla"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/btn_iniciar"
+            android:textColor="#FFF"/>
+
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/panelDatos"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="vertical"

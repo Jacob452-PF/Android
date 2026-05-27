@@ -3,17 +3,24 @@ package com.example.app_panchito_explorer
 import android.os.Bundle
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 class verMapaGuardadoActivity : AppCompatActivity() {
 
     // Id del mapa abierto; se usa al exportar.
     private var mapaActualId = -1
+    private var pantallaCompleta = false
 
     // Crea un archivo con el formato propio de la app y luego lo comparte.
     private val crearArchivo = registerForActivityResult(
@@ -51,6 +58,12 @@ class verMapaGuardadoActivity : AppCompatActivity() {
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val btnEliminar = findViewById<Button>(R.id.btnEliminar)
         val btnExportar = findViewById<Button>(R.id.btnExportar)
+        val btnPantallaCompleta = findViewById<Button>(R.id.btnPantallaCompleta)
+        val btnSalirPantallaCompleta = findViewById<Button>(R.id.btnSalirPantallaCompleta)
+        val header = findViewById<View>(R.id.header)
+        val acciones = findViewById<View>(R.id.acciones)
+        val panelDatos = findViewById<View>(R.id.panelDatos)
+        val mapaContainer = findViewById<View>(R.id.mapa)
         val mapaPreview = findViewById<MapaPreviewView>(R.id.mapaPreview)
 
         // Si no existe el mapa, muestra aviso y permite volver.
@@ -105,6 +118,22 @@ class verMapaGuardadoActivity : AppCompatActivity() {
             finish()
         }
 
+        btnPantallaCompleta.setOnClickListener {
+            cambiarPantallaCompleta(true, header, acciones, panelDatos, mapaContainer, btnSalirPantallaCompleta)
+        }
+
+        btnSalirPantallaCompleta.setOnClickListener {
+            cambiarPantallaCompleta(false, header, acciones, panelDatos, mapaContainer, btnSalirPantallaCompleta)
+        }
+
+        onBackPressedDispatcher.addCallback(this) {
+            if (pantallaCompleta) {
+                cambiarPantallaCompleta(false, header, acciones, panelDatos, mapaContainer, btnSalirPantallaCompleta)
+            } else {
+                finish()
+            }
+        }
+
         // Elimina el mapa actual de la base de datos.
         btnEliminar.setOnClickListener {
             db.eliminarMapa(mapa.id)
@@ -118,6 +147,37 @@ class verMapaGuardadoActivity : AppCompatActivity() {
                 .replace(Regex("[^A-Za-z0-9_-]"), "_")
                 .take(40)
             crearArchivo.launch("$nombreSeguro${MapaFileManager.EXTENSION}")
+        }
+    }
+
+    private fun cambiarPantallaCompleta(
+        activar: Boolean,
+        header: View,
+        acciones: View,
+        panelDatos: View,
+        mapaContainer: View,
+        btnSalir: View
+    ) {
+        pantallaCompleta = activar
+        header.visibility = if (activar) View.GONE else View.VISIBLE
+        acciones.visibility = if (activar) View.GONE else View.VISIBLE
+        panelDatos.visibility = if (activar) View.GONE else View.VISIBLE
+        btnSalir.visibility = if (activar) View.VISIBLE else View.GONE
+
+        val params = mapaContainer.layoutParams as ConstraintLayout.LayoutParams
+        params.height = if (activar) 0 else resources.getDimensionPixelSize(R.dimen.mapa_guardado_altura)
+        params.topToTop = if (activar) ConstraintLayout.LayoutParams.PARENT_ID else ConstraintLayout.LayoutParams.UNSET
+        params.topToBottom = if (activar) ConstraintLayout.LayoutParams.UNSET else R.id.header
+        params.bottomToBottom = if (activar) ConstraintLayout.LayoutParams.PARENT_ID else ConstraintLayout.LayoutParams.UNSET
+        mapaContainer.layoutParams = params
+
+        WindowCompat.setDecorFitsSystemWindows(window, !activar)
+        val controller = WindowInsetsControllerCompat(window, mapaContainer)
+        if (activar) {
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars())
         }
     }
 

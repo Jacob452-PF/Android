@@ -9,31 +9,55 @@
     android:background="@drawable/bg_gradiente"
     tools:context=".VideoActivity">
 
-    <!-- TÍTULO -->
-    <TextView
-        android:id="@+id/tituloVideo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🎥 Video Tutorial"
-        android:textColor="@color/white"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:layout_marginTop="20dp"
+    <LinearLayout
+        android:id="@+id/headerVideo"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="10dp"
+        android:background="#0E3C6E"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <!-- CONTENEDOR DEL VIDEO -->
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_regresar"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Video Tutorial"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:gravity="center"/>
+
+        <Button
+            android:id="@+id/btnAbrirYoutube"
+            android:layout_width="96dp"
+            android:layout_height="40dp"
+            android:background="@drawable/btn_iniciar"
+            android:text="YouTube"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"/>
+    </LinearLayout>
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardVideo"
         android:layout_width="0dp"
-        android:layout_height="220dp"
-        android:layout_margin="20dp"
-        app:cardCornerRadius="20dp"
+        android:layout_height="0dp"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="8dp"
         app:cardElevation="8dp"
         app:strokeColor="#00E5FF"
         app:strokeWidth="2dp"
-        app:layout_constraintTop_toBottomOf="@id/tituloVideo"
+        app:layout_constraintTop_toBottomOf="@id/headerVideo"
+        app:layout_constraintBottom_toTopOf="@id/textoVideo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -43,17 +67,19 @@
             android:layout_height="match_parent"/>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- DESCRIPCIÓN -->
     <TextView
+        android:id="@+id/textoVideo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="20dp"
         android:text="Aprende a usar la app Panchito paso a paso con este video tutorial."
-        android:textColor="@color/white"
+        android:textColor="#FFFFFF"
         android:textSize="16sp"
-        android:padding="16dp"
-        app:layout_constraintTop_toBottomOf="@id/cardVideo"
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

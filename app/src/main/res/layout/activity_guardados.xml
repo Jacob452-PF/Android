@@ -41,6 +41,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnBack"/>
 
+    <ImageView
+        android:id="@+id/btnRecargar"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_marginEnd="14dp"
+        android:src="@android:drawable/ic_popup_sync"
+        app:tint="#00E5FF"
+        app:layout_constraintEnd_toStartOf="@id/btnAgregar"
+        app:layout_constraintTop_toTopOf="@id/btnBack"/>
+
     <EditText
         android:id="@+id/editBuscarMapa"
         android:layout_width="0dp"
@@ -59,99 +69,25 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Lista de rutas -->
-    <LinearLayout
-        android:id="@+id/listaRutas"
+    <ScrollView
+        android:id="@+id/scrollMapas"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="vertical"
-        android:padding="16dp"
+        android:fillViewport="true"
         android:layout_marginTop="10dp"
         app:layout_constraintTop_toBottomOf="@id/editBuscarMapa"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Ruta 1 -->
         <LinearLayout
-            android:id="@+id/ruta1"
+            android:id="@+id/listaRutas"
             android:layout_width="match_parent"
-            android:layout_height="70dp"
-            android:background="@drawable/card_option"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:layout_marginBottom="12dp">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"/>
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_map"/>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_marginStart="10dp">
-
-                <TextView
-                    android:text="Ruta #1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:text="01-06-2026"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#BFDFFF"
-                    android:textSize="18sp"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Ruta 2 -->
-        <LinearLayout
-            android:id="@+id/ruta2"
-            android:layout_width="match_parent"
-            android:layout_height="70dp"
-            android:background="@drawable/card_option"
-            android:orientation="horizontal"
-            android:padding="12dp"
-            android:layout_marginBottom="12dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_map"/>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_marginStart="10dp">
-
-                <TextView
-                    android:text="Ruta #2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:textSize="20sp"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:text="01-06-2026"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="#BFDFFF"
-                    android:textSize="18sp"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </LinearLayout>
+    </ScrollView>
 
     <!-- Barra navegación -->
     <com.google.android.material.bottomnavigation.BottomNavigationView

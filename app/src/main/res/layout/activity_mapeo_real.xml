@@ -376,7 +376,11 @@
             android:gravity="center"
             android:background="@drawable/bg_card"
             android:padding="6dp">
-            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_medir" app:tint="#00E5FF"/><TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Detectar" android:textSize="12sp" android:textColor="#FFFFFF" android:layout_marginTop="4dp"/>
+            <ImageView android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_cono"
+                app:tint="#00E5FF"/><TextView
+                android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Detectar" android:textSize="12sp" android:textColor="#FFFFFF" android:layout_marginTop="4dp"/>
         </LinearLayout>
     </LinearLayout>
 
