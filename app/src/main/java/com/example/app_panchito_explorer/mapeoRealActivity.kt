@@ -456,8 +456,8 @@ class mapeoRealActivity : AppCompatActivity() {
         when (comando) {
             "F" -> registrarPasoManual(distanciaPorSegundoActual() * dt)
             "B" -> registrarPasoManual(-distanciaPorSegundoActual() * dt)
-            "L" -> { headingGrados = (headingGrados - 180 * dt).mod(360.0); actualizarUI() }
-            "R" -> { headingGrados = (headingGrados + 180 * dt).mod(360.0); actualizarUI() }
+            "L" -> { headingGrados = (headingGrados - GIRO_MANUAL_GRADOS_POR_SEGUNDO * dt).mod(360.0); actualizarUI() }
+            "R" -> { headingGrados = (headingGrados + GIRO_MANUAL_GRADOS_POR_SEGUNDO * dt).mod(360.0); actualizarUI() }
         }
     }
 
@@ -630,5 +630,6 @@ class mapeoRealActivity : AppCompatActivity() {
         private const val ROBOT_MEDIO_LARGO_CM = 8.5 // Calibrado: 17cm total
         private const val ERROR_LOCALIZACION_MAX_CM = 45.0
         private const val CORRECCION_LOCALIZACION = 0.35
+        private const val GIRO_MANUAL_GRADOS_POR_SEGUNDO = 135.0
     }
 }
