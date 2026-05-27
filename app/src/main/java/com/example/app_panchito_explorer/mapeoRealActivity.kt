@@ -74,15 +74,37 @@ class mapeoRealActivity : AppCompatActivity() {
     private val botonesActivos = arrayListOf<View>()
     private var botonMovimientoActivo: View? = null
     private val movimientoHandler = Handler(Looper.getMainLooper())
+    private val tiempoHandler = Handler(Looper.getMainLooper())
+    private val autoMovimientoHandler = Handler(Looper.getMainLooper())
     private var comandoMovimientoActivo: String? = null
+    private var comandoAutoActivo: String? = null
     private var ultimoTickMovimiento = 0L
+    private var ultimoTickAuto = 0L
+    private var tiempoInicioMs = 0L
+    private var tiempoAcumuladoMs = 0L
+    private var cronometroActivo = false
     private var movimientoBloqueadoPorMuro = false
+
+    private val tiempoRunnable = object : Runnable {
+        override fun run() {
+            actualizarTiempoMapeo()
+            tiempoHandler.postDelayed(this, TIEMPO_TICK_MS)
+        }
+    }
 
     private val movimientoRunnable = object : Runnable {
         override fun run() {
             val comando = comandoMovimientoActivo ?: return
             actualizarMovimientoManual(comando)
             movimientoHandler.postDelayed(this, MOVIMIENTO_TICK_MS)
+        }
+    }
+
+    private val autoMovimientoRunnable = object : Runnable {
+        override fun run() {
+            val comando = comandoAutoActivo ?: return
+            actualizarMovimientoAuto(comando)
+            autoMovimientoHandler.postDelayed(this, MOVIMIENTO_TICK_MS)
         }
     }
 
@@ -123,6 +145,8 @@ class mapeoRealActivity : AppCompatActivity() {
                 runOnUiThread {
                     if (!isFinishing) {
                         detenerMovimientoManual(enviarStop = false)
+                        detenerMovimientoAuto()
+                        pausarCronometro()
                         mapeoActivo = false
                         modoAuto = false
                         modoDetectar = false
@@ -143,6 +167,7 @@ class mapeoRealActivity : AppCompatActivity() {
                 enviarComando("I")
                 enviarComando(velocidadNivel.toString())
             }
+            if (mapeoActivo) iniciarCronometro() else pausarCronometro()
             actualizarEstadosBotones()
         }
 
@@ -157,10 +182,12 @@ class mapeoRealActivity : AppCompatActivity() {
         btnAutoModo.setOnClickListener {
             detenerMovimientoManual()
             if (modoAuto) {
+                detenerMovimientoAuto()
                 modoAuto = false; enviarComando("S"); botonMovimientoActivo = btnStop
             } else {
                 modoAuto = true; modoManual = false; modoDetectar = false
                 enviarComando("A"); botonMovimientoActivo = it
+                iniciarMovimientoAuto("F")
             }
             actualizarEstadosBotones()
         }
@@ -187,7 +214,7 @@ class mapeoRealActivity : AppCompatActivity() {
         configurarBotonMovimiento(btnLeft, "L")
         configurarBotonMovimiento(btnRight, "R")
         
-        btnStop.setOnClickListener { detenerMovimientoManual(); pausarMapeo(it); enviarComando("S") }
+        btnStop.setOnClickListener { detenerMovimientoManual(); detenerMovimientoAuto(); pausarMapeo(it); enviarComando("S") }
 
         btnGuardar.setOnClickListener {
             val intent = Intent(this, guardarMapaActivity::class.java)
@@ -250,8 +277,17 @@ class mapeoRealActivity : AppCompatActivity() {
             if (json.has("moving") && !json.optBoolean("moving", true)) {
                 detenerMovimientoPorRobot()
             }
-            tiempoSegundos = json.optInt("t", tiempoSegundos)
-            distanciaTotal = json.optDouble("d", distanciaTotal / 100.0) * 100.0 // Si el robot manda metros, convertir a cm
+            if (json.has("move")) {
+                procesarMovimientoRobot(json.optString("move"), json.optBoolean("moving", true))
+            }
+            if (json.has("t")) {
+                tiempoSegundos = json.optInt("t", tiempoSegundos)
+                tiempoAcumuladoMs = tiempoSegundos * 1000L
+                if (cronometroActivo) tiempoInicioMs = System.currentTimeMillis()
+            }
+            if (json.has("d")) {
+                distanciaTotal = json.optDouble("d", distanciaTotal / 100.0) * 100.0 // Si el robot manda metros, convertir a cm
+            }
             bateria = json.optInt("b", bateria)
             BluetoothManager.bateria = bateria
             if (!modoDetectar) {
@@ -285,7 +321,26 @@ class mapeoRealActivity : AppCompatActivity() {
     private fun procesarEventoRobot(evento: String) {
         when (evento.trim().uppercase()) {
             "STOP", "STOPPED", "OBSTACLE", "WALL", "BLOCKED" -> detenerMovimientoPorRobot()
-            "MOVING", "RUNNING" -> movimientoBloqueadoPorMuro = false
+            "MOVING", "RUNNING" -> {
+                movimientoBloqueadoPorMuro = false
+                if (modoAuto) iniciarMovimientoAuto(comandoAutoActivo ?: "F")
+            }
+        }
+    }
+
+    private fun procesarMovimientoRobot(movimiento: String, moving: Boolean) {
+        if (!modoAuto) return
+        if (!moving) {
+            detenerMovimientoAuto()
+            return
+        }
+
+        when (movimiento.trim().uppercase()) {
+            "F", "FRONT", "FORWARD" -> iniciarMovimientoAuto("F")
+            "B", "BACK" -> iniciarMovimientoAuto("B")
+            "L", "LEFT" -> iniciarMovimientoAuto("L")
+            "R", "RIGHT" -> iniciarMovimientoAuto("R")
+            "S", "STOP" -> detenerMovimientoAuto()
         }
     }
 
@@ -294,6 +349,7 @@ class mapeoRealActivity : AppCompatActivity() {
             actualizarMovimientoManual(comandoMovimientoActivo!!)
         }
         comandoMovimientoActivo = null
+        detenerMovimientoAuto()
         movimientoBloqueadoPorMuro = true
         movimientoHandler.removeCallbacks(movimientoRunnable)
         botonMovimientoActivo = null
@@ -360,6 +416,24 @@ class mapeoRealActivity : AppCompatActivity() {
         actualizarEstadosBotones()
     }
 
+    private fun iniciarMovimientoAuto(comando: String) {
+        if (!mapeoActivo || !modoAuto || movimientoBloqueadoPorMuro) return
+        if (comandoAutoActivo == comando) return
+        detenerMovimientoAuto()
+        comandoAutoActivo = comando
+        ultimoTickAuto = System.currentTimeMillis()
+        autoMovimientoHandler.post(autoMovimientoRunnable)
+    }
+
+    private fun detenerMovimientoAuto() {
+        val comando = comandoAutoActivo
+        if (comando != null) {
+            actualizarMovimientoAuto(comando)
+        }
+        comandoAutoActivo = null
+        autoMovimientoHandler.removeCallbacks(autoMovimientoRunnable)
+    }
+
     private fun actualizarMovimientoManual(comando: String) {
         val dt = ((System.currentTimeMillis() - ultimoTickMovimiento).coerceAtLeast(0)) / 1000.0
         ultimoTickMovimiento = System.currentTimeMillis()
@@ -372,18 +446,35 @@ class mapeoRealActivity : AppCompatActivity() {
         }
     }
 
+    private fun actualizarMovimientoAuto(comando: String) {
+        val dt = ((System.currentTimeMillis() - ultimoTickAuto).coerceAtLeast(0)) / 1000.0
+        ultimoTickAuto = System.currentTimeMillis()
+        if (dt <= 0.0 || !mapeoActivo || !modoAuto || movimientoBloqueadoPorMuro) return
+
+        when (comando) {
+            "F" -> registrarPaso("auto", distanciaPorSegundoActual() * dt, actualizarMedidas = true)
+            "B" -> registrarPaso("auto", -distanciaPorSegundoActual() * dt, actualizarMedidas = true)
+            "L" -> headingGrados = (headingGrados - 180 * dt).mod(360.0)
+            "R" -> headingGrados = (headingGrados + 180 * dt).mod(360.0)
+        }
+    }
+
     private fun registrarPasoManual(distancia: Double) {
         if (!mapeoActivo || !modoManual) return
+        registrarPaso("manual", distancia, escaneoConstruyeMapa)
+    }
+
+    private fun registrarPaso(modo: String, distancia: Double, actualizarMedidas: Boolean) {
         distanciaTotal += Math.abs(distancia)
         posX += sin(Math.toRadians(headingGrados)) * distancia
         posY += cos(Math.toRadians(headingGrados)) * distancia
-        if (escaneoConstruyeMapa) actualizarLimitesDesdePunto(posX, posY)
+        if (actualizarMedidas) actualizarLimitesDesdePunto(posX, posY)
         if (iniciandoTramo || rutaManual.isEmpty()) {
-            rutaManual.add("${ordenRuta++},$posX,$posY,manual"); iniciandoTramo = false
+            rutaManual.add("${ordenRuta++},$posX,$posY,$modo"); iniciandoTramo = false
         } else {
             val last = rutaManual.size - 1
             val id = rutaManual[last].split(",")[0]
-            rutaManual[last] = "$id,$posX,$posY,manual"
+            rutaManual[last] = "$id,$posX,$posY,$modo"
         }
         mapaPreview.setRutaDesdeTexto(rutaManual, puertasDetectadas); actualizarUI()
     }
@@ -395,11 +486,36 @@ class mapeoRealActivity : AppCompatActivity() {
 
     private fun reiniciarMapa() {
         oeste = 0.0; norte = 0.0; sur = 0.0; este = 0.0; distanciaTotal = 0.0
+        tiempoSegundos = 0; tiempoAcumuladoMs = 0L; tiempoInicioMs = System.currentTimeMillis()
         headingGrados = 0.0; posX = 0.0; posY = 0.0; ordenRuta = 0
+        iniciandoTramo = true
         rutaManual.clear(); rutaManual.add("${ordenRuta++},0.0,0.0,inicio")
         muroPuntos.clear(); obstaculoPuntos.clear()
         mapaPreview.setRutaDesdeTexto(rutaManual, 0); mapaPreview.setMuroPuntos(muroPuntos)
         mapaPreview.setObstaculos(obstaculoPuntos); actualizarUI()
+    }
+
+    private fun iniciarCronometro() {
+        if (cronometroActivo) return
+        cronometroActivo = true
+        tiempoInicioMs = System.currentTimeMillis()
+        tiempoHandler.post(tiempoRunnable)
+    }
+
+    private fun pausarCronometro() {
+        if (!cronometroActivo) return
+        actualizarTiempoMapeo()
+        tiempoAcumuladoMs = tiempoSegundos * 1000L
+        cronometroActivo = false
+        tiempoHandler.removeCallbacks(tiempoRunnable)
+    }
+
+    private fun actualizarTiempoMapeo() {
+        if (cronometroActivo) {
+            val transcurrido = System.currentTimeMillis() - tiempoInicioMs
+            tiempoSegundos = ((tiempoAcumuladoMs + transcurrido) / 1000L).toInt()
+        }
+        actualizarUI()
     }
 
     private fun actualizarUI() {
@@ -416,12 +532,21 @@ class mapeoRealActivity : AppCompatActivity() {
     }
 
     private fun pausarMapeo(boton: View) {
+        detenerMovimientoAuto()
         mapeoActivo = false; modoAuto = false; modoDetectar = false
         comandoMovimientoActivo = null; movimientoHandler.removeCallbacks(movimientoRunnable)
+        pausarCronometro()
         botonMovimientoActivo = boton; actualizarEstadosBotones()
     }
 
-    private fun salirModosAutomaticos() { if (modoAuto || modoDetectar) { enviarComando("S"); modoAuto = false; modoDetectar = false } }
+    private fun salirModosAutomaticos() {
+        if (modoAuto || modoDetectar) {
+            enviarComando("S")
+            detenerMovimientoAuto()
+            modoAuto = false
+            modoDetectar = false
+        }
+    }
 
     private fun actualizarEstadosBotones() {
         botonesActivos.forEach { pintarBoton(it, false) }
@@ -450,15 +575,23 @@ class mapeoRealActivity : AppCompatActivity() {
     // Retorna CENTÍMETROS por segundo. Calibrado: 1.80m / 5s = 36cm/s en L3
     private fun distanciaPorSegundoActual(): Double = when (velocidadNivel) { 1 -> 12.0; 2 -> 24.0; else -> 36.0 }
 
-    override fun onPause() { detenerMovimientoManual(); super.onPause() }
+    override fun onPause() {
+        detenerMovimientoManual()
+        detenerMovimientoAuto()
+        pausarCronometro()
+        super.onPause()
+    }
 
     override fun onDestroy() {
+        tiempoHandler.removeCallbacks(tiempoRunnable)
+        autoMovimientoHandler.removeCallbacks(autoMovimientoRunnable)
         BluetoothManager.onLineaRecibida = null; BluetoothManager.onDesconectado = null
         super.onDestroy()
     }
 
     companion object {
         private const val MOVIMIENTO_TICK_MS = 100L
+        private const val TIEMPO_TICK_MS = 1000L
         private const val MIN_MUROS_PARA_LOCALIZAR = 8
         private const val DISTANCIA_MIN_MURO_CM = 3.0
         private const val DISTANCIA_MAX_MURO_CM = 300.0

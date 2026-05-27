@@ -64,12 +64,27 @@ class verMapaGuardadoActivity : AppCompatActivity() {
         // Carga ruta y muros para dibujar la vista previa.
         val rutas = db.obtenerRutas(mapa.id)
         val muroPuntos = db.obtenerMuroPuntos(mapa.id)
+        val rutasPreview = rutas.map { punto ->
+            RutaPunto(
+                orden = punto.orden,
+                x = punto.x * 100.0,
+                y = punto.y * 100.0,
+                modo = punto.modo
+            )
+        }
+        val muroPuntosPreview = muroPuntos.map { punto ->
+            MuroPunto(
+                x = punto.x * 100.0,
+                y = punto.y * 100.0,
+                grupo = punto.grupo
+            )
+        }
+        val puntosAuto = rutas.count { it.modo.equals("auto", ignoreCase = true) }
         mapaActualId = mapa.id
-        mapaPreview.setMedidasMuros(mapa.oeste, mapa.norte, mapa.sur, mapa.este)
+        mapaPreview.setMedidasMuros(mapa.oeste * 100.0, mapa.norte * 100.0, mapa.sur * 100.0, mapa.este * 100.0)
         mapaPreview.setMostrarMedidas(true)
-        mapaPreview.setRuta(rutas, mapa.puertas)
-        mapaPreview.setMedidasMuros(mapa.oeste, mapa.norte, mapa.sur, mapa.este)
-        mapaPreview.setMuroPuntos(muroPuntos)
+        mapaPreview.setRuta(rutasPreview, mapa.puertas)
+        mapaPreview.setMuroPuntos(muroPuntosPreview)
 
         // Muestra los datos generales del mapa guardado.
         titulo.text = mapa.nombre
@@ -77,8 +92,8 @@ class verMapaGuardadoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvNorteGuardado).text = "Norte\n${"%.1f".format(mapa.norte)} M"
         findViewById<TextView>(R.id.tvSurGuardado).text = "Sur\n${"%.1f".format(mapa.sur)} M"
         findViewById<TextView>(R.id.tvEsteGuardado).text = "Este\n${"%.1f".format(mapa.este)} M"
-        findViewById<TextView>(R.id.tvTiempo).text = "Tiempo: ${mapa.tiempoSegundos} s\n"
-        findViewById<TextView>(R.id.tvRuta).text = "Ruta manual: ${rutas.size} puntos\n"
+        findViewById<TextView>(R.id.tvTiempo).text = "Tiempo: ${formatearTiempo(mapa.tiempoSegundos)}\n"
+        findViewById<TextView>(R.id.tvRuta).text = "Recorrido: ${rutas.size} puntos | Auto: $puntosAuto\n"
         findViewById<TextView>(R.id.tvDistanciaGuardada).text = "Distancia: ${"%.1f".format(mapa.distanciaTotal)} m\n"
         findViewById<TextView>(R.id.tvPequenosGuardados).text = "Obstaculos pequenos: ${mapa.pequenos}\n"
         findViewById<TextView>(R.id.tvGrandesGuardados).text = "Obstaculos grandes: ${mapa.grandes}\n"
@@ -114,5 +129,11 @@ class verMapaGuardadoActivity : AppCompatActivity() {
         }
 
         startActivity(Intent.createChooser(intent, "Compartir mapa"))
+    }
+
+    private fun formatearTiempo(totalSegundos: Int): String {
+        val minutos = totalSegundos / 60
+        val segundos = totalSegundos % 60
+        return "%02d:%02d".format(minutos, segundos)
     }
 }

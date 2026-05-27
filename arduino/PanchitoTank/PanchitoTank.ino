@@ -61,6 +61,8 @@ int flag = 0;
 int left_light = 0;
 int right_light = 0;
 unsigned long lastTelemetryMs = 0;
+unsigned long lastMotionReportMs = 0;
+char lastReportedMove = '?';
 
 void setup() {
   Serial.begin(9600);
@@ -215,18 +217,18 @@ void avoid() {
 
       if (a1 < 50 || a2 < 50) {
         if (a1 > a2) {
-          Car_left(false);
+          Car_left(true);
           delay(500);
         } else {
-          Car_right(false);
+          Car_right(true);
           delay(500);
         }
       } else {
         if (random2 % 2 == 0) {
-          Car_left(false);
+          Car_left(true);
           delay(500);
         } else {
-          Car_right(false);
+          Car_right(true);
           delay(500);
         }
       }
@@ -339,7 +341,7 @@ void Car_front(bool revisarObstaculo) {
   analogWrite(MR_PWM, velocidadPWM);
   digitalWrite(ML_Ctrl, LOW);
   analogWrite(ML_PWM, velocidadPWM);
-  Serial.println("{\"event\":\"MOVING\",\"moving\":true}");
+  reportMotion('F', true);
 }
 
 void Car_back() {
@@ -351,7 +353,7 @@ void Car_back(bool avisar) {
   analogWrite(MR_PWM, velocidadPWM);
   digitalWrite(ML_Ctrl, HIGH);
   analogWrite(ML_PWM, velocidadPWM);
-  if (avisar) Serial.println("{\"event\":\"MOVING\",\"moving\":true}");
+  if (avisar) reportMotion('B', true);
 }
 
 void Car_left() {
@@ -363,7 +365,7 @@ void Car_left(bool avisar) {
   analogWrite(MR_PWM, velocidadPWM);
   digitalWrite(ML_Ctrl, HIGH);
   analogWrite(ML_PWM, velocidadPWM);
-  if (avisar) Serial.println("{\"event\":\"MOVING\",\"moving\":true}");
+  if (avisar) reportMotion('L', true);
 }
 
 void Car_right() {
@@ -375,7 +377,7 @@ void Car_right(bool avisar) {
   analogWrite(MR_PWM, velocidadPWM);
   digitalWrite(ML_Ctrl, LOW);
   analogWrite(ML_PWM, velocidadPWM);
-  if (avisar) Serial.println("{\"event\":\"MOVING\",\"moving\":true}");
+  if (avisar) reportMotion('R', true);
 }
 
 void Car_Stop() {
@@ -387,7 +389,23 @@ void Car_Stop(bool avisar) {
   analogWrite(MR_PWM, 0);
   digitalWrite(ML_Ctrl, LOW);
   analogWrite(ML_PWM, 0);
-  if (avisar) Serial.println("{\"event\":\"STOP\",\"moving\":false}");
+  if (avisar) reportMotion('S', false);
+}
+
+void reportMotion(char move, bool moving) {
+  unsigned long now = millis();
+  if (move == lastReportedMove && now - lastMotionReportMs < 250) return;
+
+  lastReportedMove = move;
+  lastMotionReportMs = now;
+
+  Serial.print("{\"event\":\"");
+  Serial.print(moving ? "MOVING" : "STOP");
+  Serial.print("\",\"moving\":");
+  Serial.print(moving ? "true" : "false");
+  Serial.print(",\"move\":\"");
+  Serial.print(move);
+  Serial.println("\"}");
 }
 
 void enviarTelemetriaCadaSegundo() {

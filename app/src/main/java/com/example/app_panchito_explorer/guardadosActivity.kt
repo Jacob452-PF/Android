@@ -100,6 +100,9 @@ class guardadosActivity : AppCompatActivity() {
 
         // Crea una tarjeta visual por cada mapa guardado.
         mapas.forEach { mapa ->
+            val rutas = DBHelper(this).obtenerRutas(mapa.id)
+            val puntosAuto = rutas.count { it.modo.equals("auto", ignoreCase = true) }
+
             val item = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 setPadding(dp(12), dp(12), dp(12), dp(12))
@@ -135,8 +138,8 @@ class guardadosActivity : AppCompatActivity() {
             }
 
             val detalle = TextView(this).apply {
-                // El detalle resume distancia, puntos de ruta y puertas posibles.
-                text = "${"%.1f".format(mapa.distanciaTotal)} m | Ruta ${DBHelper(this@guardadosActivity).obtenerRutas(mapa.id).size} pts | Puertas ${mapa.puertas}"
+                // El detalle resume distancia, tiempo, recorrido y puertas posibles.
+                text = "${"%.1f".format(mapa.distanciaTotal)} m | ${formatearTiempo(mapa.tiempoSegundos)} | ${rutas.size} pts | Auto $puntosAuto"
                 setTextColor(android.graphics.Color.rgb(191, 223, 255))
                 textSize = 14f
             }
@@ -160,5 +163,11 @@ class guardadosActivity : AppCompatActivity() {
     // Convierte dp a pixeles para mantener tamanos consistentes en distintos dispositivos.
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
+    }
+
+    private fun formatearTiempo(totalSegundos: Int): String {
+        val minutos = totalSegundos / 60
+        val segundos = totalSegundos % 60
+        return "%02d:%02d".format(minutos, segundos)
     }
 }

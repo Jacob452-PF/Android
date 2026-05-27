@@ -13,6 +13,7 @@ object MapaFileManager {
         val db = DBHelper(context)
         val mapa = db.obtenerMapa(mapaId) ?: return null
         val rutas = db.obtenerRutas(mapaId)
+        val muroPuntos = db.obtenerMuroPuntos(mapaId)
         val puertas = db.obtenerPuertas(mapaId)
 
         val json = JSONObject()
@@ -41,6 +42,18 @@ object MapaFileManager {
             )
         }
         json.put("ruta", rutasJson)
+
+        val muroPuntosJson = JSONArray()
+        muroPuntos.forEachIndexed { index, punto ->
+            muroPuntosJson.put(
+                JSONObject()
+                    .put("orden", index)
+                    .put("x", punto.x)
+                    .put("y", punto.y)
+                    .put("grupo", punto.grupo)
+            )
+        }
+        json.put("muroPuntos", muroPuntosJson)
 
         val puertasJson = JSONArray()
         puertas.forEach { puerta ->
@@ -94,6 +107,18 @@ object MapaFileManager {
                 x = punto.optDouble("x", 0.0),
                 y = punto.optDouble("y", 0.0),
                 modo = punto.optString("modo", "manual")
+            )
+        }
+
+        val muroPuntos = json.optJSONArray("muroPuntos") ?: JSONArray()
+        for (i in 0 until muroPuntos.length()) {
+            val punto = muroPuntos.getJSONObject(i)
+            db.insertarMuroPunto(
+                mapaId = mapaId,
+                orden = punto.optInt("orden", i),
+                x = punto.optDouble("x", 0.0),
+                y = punto.optDouble("y", 0.0),
+                grupo = punto.optInt("grupo", 0)
             )
         }
 

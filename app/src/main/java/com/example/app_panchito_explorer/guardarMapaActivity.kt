@@ -37,6 +37,8 @@ class guardarMapaActivity : AppCompatActivity() {
         val tvNorte = findViewById<TextView>(R.id.tvNorte)
         val tvSur = findViewById<TextView>(R.id.tvSur)
         val tvEste = findViewById<TextView>(R.id.tvEste)
+        val tvArea = findViewById<TextView>(R.id.tvArea)
+        val tvTiempo = findViewById<TextView>(R.id.tvTiempo)
         val tvDistancia = findViewById<TextView>(R.id.tvDistancia)
         val tvPequenos = findViewById<TextView>(R.id.tvPequenos)
         val tvGrandes = findViewById<TextView>(R.id.tvGrandes)
@@ -69,20 +71,37 @@ class guardarMapaActivity : AppCompatActivity() {
                 )
             }
         }
+        val muroPuntosPreview = muroPuntos.map { punto ->
+            MuroPunto(punto.x * 100.0, punto.y * 100.0, punto.grupo)
+        }
+        val rutaPreview = rutaManual.mapNotNull { punto ->
+            val partes = punto.split(",")
+            if (partes.size < 4) {
+                null
+            } else {
+                val orden = partes[0].toIntOrNull() ?: 0
+                val xCm = (partes[1].toDoubleOrNull() ?: 0.0) * 100.0
+                val yCm = (partes[2].toDoubleOrNull() ?: 0.0) * 100.0
+                "$orden,$xCm,$yCm,${partes[3]}"
+            }
+        }
+        val puntosAuto = rutaManual.count { it.endsWith(",auto") }
+        val area = (oeste + este) * (norte + sur)
 
         // Muestra el resumen de medidas y obstaculos antes de guardar.
         tvOeste.text = "Oeste\n${"%.1f".format(oeste)} M"
         tvNorte.text = "Norte\n${"%.1f".format(norte)} M"
         tvSur.text = "Sur\n${"%.1f".format(sur)} M"
         tvEste.text = "Este\n${"%.1f".format(este)} M"
+        tvArea.text = "Area: ${"%.1f".format(area)} m2"
+        tvTiempo.text = "Tiempo: ${formatearTiempo(tiempoSegundos)}"
         tvDistancia.text = "Distancia: ${"%.1f".format(distancia)} M"
         tvPequenos.text = "Obstaculos pequenos: $pequenos"
         tvGrandes.text = "Obstaculos grandes: $grandes | Puertas posibles: $puertas"
-        mapaPreview.setMedidasMuros(oeste, norte, sur, este)
+        mapaPreview.setMedidasMuros(oeste * 100.0, norte * 100.0, sur * 100.0, este * 100.0)
         mapaPreview.setMostrarMedidas(true)
-        mapaPreview.setRutaDesdeTexto(rutaManual, puertas)
-        mapaPreview.setMedidasMuros(oeste, norte, sur, este)
-        mapaPreview.setMuroPuntos(muroPuntos)
+        mapaPreview.setRutaDesdeTexto(rutaPreview, puertas)
+        mapaPreview.setMuroPuntos(muroPuntosPreview)
 
         // Regresa sin guardar.
         btnBack.setOnClickListener {
@@ -94,7 +113,7 @@ class guardarMapaActivity : AppCompatActivity() {
             val db = DBHelper(this)
             val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
             val nombre = "Mapa $fecha"
-            val descripcion = "Ruta manual: ${rutaManual.size} puntos"
+            val descripcion = "Recorrido: ${rutaManual.size} puntos | Auto: $puntosAuto"
 
             val mapaId = db.insertarMapa(
                 nombre = nombre,
@@ -172,5 +191,11 @@ class guardarMapaActivity : AppCompatActivity() {
             startActivity(Intent(this, guardadosActivity::class.java))
             finish()
         }
+    }
+
+    private fun formatearTiempo(totalSegundos: Int): String {
+        val minutos = totalSegundos / 60
+        val segundos = totalSegundos % 60
+        return "%02d:%02d".format(minutos, segundos)
     }
 }
