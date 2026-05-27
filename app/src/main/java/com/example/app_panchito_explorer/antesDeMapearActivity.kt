@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import org.json.JSONObject
 
 class antesDeMapearActivity : AppCompatActivity() {
 
@@ -124,9 +125,41 @@ class antesDeMapearActivity : AppCompatActivity() {
 
         super.onResume()
 
+        BluetoothManager.onLineaRecibida = { linea ->
+            runOnUiThread {
+                actualizarBateriaDesdeLinea(linea)
+                actualizarEstadoBluetooth(mostrarAviso = false)
+            }
+        }
+
         if (::bateriaTexto.isInitialized) {
 
             actualizarEstadoBluetooth(mostrarAviso = false)
+        }
+    }
+
+    override fun onPause() {
+        if (BluetoothManager.onLineaRecibida != null) {
+            BluetoothManager.onLineaRecibida = null
+        }
+        super.onPause()
+    }
+
+    private fun actualizarBateriaDesdeLinea(linea: String) {
+        val texto = linea.trim()
+        val match = Regex("""^(BAT|BATERIA|B)[:=]\s*(\d{1,3})%?$""", RegexOption.IGNORE_CASE).find(texto)
+
+        if (match != null) {
+            BluetoothManager.bateria = match.groupValues[2].toInt().coerceIn(0, 100)
+            return
+        }
+
+        try {
+            val json = JSONObject(texto)
+            if (json.has("b")) {
+                BluetoothManager.bateria = json.optInt("b", BluetoothManager.bateria).coerceIn(0, 100)
+            }
+        } catch (_: Exception) {
         }
     }
 
@@ -141,16 +174,11 @@ class antesDeMapearActivity : AppCompatActivity() {
                 BluetoothManager.nombreDispositivo
                     ?: "Dispositivo conectado"
 
-            if (BluetoothManager.bateria <= 0) {
-
-                BluetoothManager.bateria = 85
-            }
-
             val bateria =
                 BluetoothManager.bateria
 
             bateriaTexto.text =
-                "$bateria%"
+                if (bateria > 0) "$bateria%" else "Sin lectura"
 
             bateriaBarra.progress =
                 bateria
