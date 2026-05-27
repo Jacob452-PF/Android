@@ -3,6 +3,7 @@ package com.example.app_panchito_explorer
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -42,6 +43,7 @@ class guardarMapaActivity : AppCompatActivity() {
         val tvDistancia = findViewById<TextView>(R.id.tvDistancia)
         val tvPequenos = findViewById<TextView>(R.id.tvPequenos)
         val tvGrandes = findViewById<TextView>(R.id.tvGrandes)
+        val editNombreMapa = findViewById<EditText>(R.id.editNombreMapa)
         val mapaPreview = findViewById<MapaPreviewView>(R.id.mapaPreview)
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val btnGuardar = findViewById<Button>(R.id.btnGuardar)
@@ -87,6 +89,8 @@ class guardarMapaActivity : AppCompatActivity() {
         }
         val puntosAuto = rutaManual.count { it.endsWith(",auto") }
         val area = (oeste + este) * (norte + sur)
+        val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+        editNombreMapa.setText("Mapa $fecha")
 
         // Muestra el resumen de medidas y obstaculos antes de guardar.
         tvOeste.text = "Oeste\n${"%.1f".format(oeste)} M"
@@ -111,8 +115,7 @@ class guardarMapaActivity : AppCompatActivity() {
         // Guarda el mapa completo en la base de datos local.
         btnGuardar.setOnClickListener {
             val db = DBHelper(this)
-            val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
-            val nombre = "Mapa $fecha"
+            val nombre = editNombreMapa.text.toString().trim().ifBlank { "Mapa $fecha" }
             val descripcion = "Recorrido: ${rutaManual.size} puntos | Auto: $puntosAuto"
 
             val mapaId = db.insertarMapa(

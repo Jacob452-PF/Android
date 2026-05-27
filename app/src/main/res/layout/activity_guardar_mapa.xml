@@ -143,6 +143,18 @@
             android:textSize="12sp"
             android:layout_marginBottom="10dp"/>
 
+        <EditText
+            android:id="@+id/editNombreMapa"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:backgroundTint="#00E5FF"
+            android:hint="Nombre del mapa"
+            android:inputType="textCapSentences"
+            android:singleLine="true"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#B0C4DE"
+            android:textSize="16sp"/>
+
         <!-- FILA SUPERIOR -->
 
         <LinearLayout

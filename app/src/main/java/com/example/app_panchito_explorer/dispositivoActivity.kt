@@ -230,4 +230,18 @@ class dispositivoActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        if (::textDevice.isInitialized && direccionDispositivo != "Sin direcciÃ³n") {
+            val alias = DBHelper(this).obtenerNombreDispositivo(direccionDispositivo)
+            if (!alias.isNullOrBlank()) {
+                nombreDispositivo = alias
+                textDevice.text = alias
+                if (BluetoothManager.direccionDispositivo == direccionDispositivo) {
+                    BluetoothManager.nombreDispositivo = alias
+                }
+            }
+        }
+    }
 }

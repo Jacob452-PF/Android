@@ -2,7 +2,10 @@ package com.example.app_panchito_explorer
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -35,6 +38,7 @@ class guardadosActivity : AppCompatActivity() {
         val btnBack = findViewById<ImageView>(R.id.btnBack)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNavigation)
         val listaRutas = findViewById<LinearLayout>(R.id.listaRutas)
+        val editBuscarMapa = findViewById<EditText>(R.id.editBuscarMapa)
 
         // Abre la pantalla para importar un mapa desde archivo.
         btnAgregar.setOnClickListener {
@@ -42,7 +46,15 @@ class guardadosActivity : AppCompatActivity() {
         }
 
         // Carga los mapas guardados al entrar a la pantalla.
-        cargarMapas(listaRutas)
+        cargarMapas(listaRutas, editBuscarMapa.text.toString())
+
+        editBuscarMapa.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                cargarMapas(listaRutas, s?.toString().orEmpty())
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
 
         bottomNav.selectedItemId = R.id.nav_files
 
@@ -75,22 +87,41 @@ class guardadosActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         val listaRutas = findViewById<LinearLayout>(R.id.listaRutas)
+        val editBuscarMapa = findViewById<EditText>(R.id.editBuscarMapa)
         // Actualiza la lista por si se importo o elimino un mapa.
-        cargarMapas(listaRutas)
+        cargarMapas(listaRutas, editBuscarMapa.text.toString())
     }
 
     // =========================
     // CARGAR MAPAS
     // =========================
-    private fun cargarMapas(listaRutas: LinearLayout) {
+    private fun cargarMapas(listaRutas: LinearLayout, busqueda: String = "") {
         listaRutas.removeAllViews()
 
-        val mapas = DBHelper(this).obtenerMapasGuardados()
+        val db = DBHelper(this)
+        val consulta = busqueda.trim().lowercase()
+        val mapas = db.obtenerMapasGuardados().filter { mapa ->
+            if (consulta.isBlank()) {
+                true
+            } else {
+                val rutas = db.obtenerRutas(mapa.id)
+                val texto = listOf(
+                    mapa.nombre,
+                    mapa.descripcion,
+                    "%.1f".format(mapa.distanciaTotal),
+                    formatearTiempo(mapa.tiempoSegundos),
+                    "${rutas.size}",
+                    "${mapa.puertas}"
+                ).joinToString(" ").lowercase()
+
+                texto.contains(consulta)
+            }
+        }
 
         // Muestra un mensaje cuando aun no hay mapas en la base de datos.
         if (mapas.isEmpty()) {
             val empty = TextView(this).apply {
-                text = "No hay mapas guardados"
+                text = if (consulta.isBlank()) "No hay mapas guardados" else "No se encontraron mapas"
                 setTextColor(android.graphics.Color.WHITE)
                 textSize = 18f
             }
@@ -100,7 +131,7 @@ class guardadosActivity : AppCompatActivity() {
 
         // Crea una tarjeta visual por cada mapa guardado.
         mapas.forEach { mapa ->
-            val rutas = DBHelper(this).obtenerRutas(mapa.id)
+            val rutas = db.obtenerRutas(mapa.id)
             val puntosAuto = rutas.count { it.modo.equals("auto", ignoreCase = true) }
 
             val item = LinearLayout(this).apply {

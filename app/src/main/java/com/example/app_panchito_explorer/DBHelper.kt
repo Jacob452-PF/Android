@@ -159,6 +159,37 @@ class DBHelper(context: Context) :
         return writableDatabase.insert("dispositivos", null, values)
     }
 
+    fun guardarDispositivoLocal(nombre: String, direccion: String): Long {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nombre)
+            put("direccion", direccion)
+        }
+
+        val actualizados = db.update(
+            "dispositivos",
+            values,
+            "direccion=?",
+            arrayOf(direccion)
+        )
+
+        return if (actualizados > 0) actualizados.toLong()
+        else db.insert("dispositivos", null, values)
+    }
+
+    fun obtenerNombreDispositivo(direccion: String): String? {
+        val cursor = readableDatabase.rawQuery(
+            "SELECT nombre FROM dispositivos WHERE direccion=? ORDER BY id DESC LIMIT 1",
+            arrayOf(direccion)
+        )
+
+        cursor.use {
+            if (it.moveToFirst()) return it.getString(0)
+        }
+
+        return null
+    }
+
     fun insertarMapa(
         nombre: String,
         descripcion: String,

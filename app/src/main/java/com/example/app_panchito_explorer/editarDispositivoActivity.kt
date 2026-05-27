@@ -67,13 +67,15 @@ class editarDispositivoActivity : AppCompatActivity() {
         // =========================
 
         val nombre =
-            intent.getStringExtra("nombre")
+            intent.getStringExtra("device_name")
+                ?: intent.getStringExtra("nombre")
 
         val descripcion =
             intent.getStringExtra("descripcion")
 
         val mac =
-            intent.getStringExtra("mac")
+            intent.getStringExtra("device_address")
+                ?: intent.getStringExtra("mac")
 
         // MOSTRAR DATOS
 
@@ -143,11 +145,16 @@ class editarDispositivoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // SIMULACION GUARDADO
+            val direccion = mac ?: ""
+            DBHelper(this).guardarDispositivoLocal(nuevoNombre, direccion)
+
+            if (BluetoothManager.direccionDispositivo == direccion) {
+                BluetoothManager.nombreDispositivo = nuevoNombre
+            }
 
             Toast.makeText(
                 this,
-                "Cambios guardados ✔",
+                "Cambios guardados",
                 Toast.LENGTH_SHORT
             ).show()
 
@@ -157,4 +164,3 @@ class editarDispositivoActivity : AppCompatActivity() {
         }
     }
 }
-

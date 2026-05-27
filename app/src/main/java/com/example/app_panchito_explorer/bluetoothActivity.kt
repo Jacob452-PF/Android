@@ -359,11 +359,13 @@ class bluetoothActivity : AppCompatActivity() {
 
                 val device = dispositivosBLE[posicionBle]
 
-                val nombre =
-                    device.name ?: "Dispositivo BLE"
-
                 val direccion =
                     device.address
+
+                val nombre =
+                    DBHelper(this).obtenerNombreDispositivo(direccion)
+                        ?: device.name
+                        ?: "Dispositivo BLE"
 
                 val info =
                     "$nombre\n$direccion"
@@ -525,11 +527,13 @@ class bluetoothActivity : AppCompatActivity() {
 
                 val device = result.device
 
-                val nombre =
-                    device.name ?: "Dispositivo BLE"
-
                 val direccion =
                     device.address
+
+                val nombre =
+                    DBHelper(this@bluetoothActivity).obtenerNombreDispositivo(direccion)
+                        ?: device.name
+                        ?: "Dispositivo BLE"
 
                 val info =
                     "$nombre\n$direccion"

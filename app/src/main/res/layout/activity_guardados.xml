@@ -41,6 +41,23 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/btnBack"/>
 
+    <EditText
+        android:id="@+id/editBuscarMapa"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="#00E5FF"
+        android:hint="Buscar mapa"
+        android:inputType="text"
+        android:singleLine="true"
+        android:textColor="#FFFFFF"
+        android:textColorHint="#BFDFFF"
+        app:layout_constraintTop_toBottomOf="@id/tituloGuardados"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <!-- Lista de rutas -->
     <LinearLayout
         android:id="@+id/listaRutas"
@@ -48,8 +65,8 @@
         android:layout_height="0dp"
         android:orientation="vertical"
         android:padding="16dp"
-        android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@id/tituloGuardados"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/editBuscarMapa"
         app:layout_constraintBottom_toTopOf="@id/bottomNavigation"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
