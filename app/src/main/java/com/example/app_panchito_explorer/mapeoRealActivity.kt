@@ -419,7 +419,11 @@ class mapeoRealActivity : AppCompatActivity() {
     private fun iniciarMovimientoAuto(comando: String) {
         if (!mapeoActivo || !modoAuto || movimientoBloqueadoPorMuro) return
         if (comandoAutoActivo == comando) return
+        val comandoAnterior = comandoAutoActivo
         detenerMovimientoAuto()
+        if (comandoAnterior != null && comandoAnterior != comando) {
+            iniciandoTramo = true
+        }
         comandoAutoActivo = comando
         ultimoTickAuto = System.currentTimeMillis()
         autoMovimientoHandler.post(autoMovimientoRunnable)

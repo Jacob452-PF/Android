@@ -248,9 +248,9 @@ void light_track() {
     right_light = analogRead(light_R_Pin);
 
     if (left_light > 650 && right_light > 650) Car_front(false);
-    else if (left_light > 650 && right_light <= 650) Car_left(false);
-    else if (left_light <= 650 && right_light > 650) Car_right(false);
-    else Car_Stop(false);
+    else if (left_light > 650 && right_light <= 650) Car_left(true);
+    else if (left_light <= 650 && right_light > 650) Car_right(true);
+    else Car_Stop(true);
 
     revisarSalidaModo();
     enviarTelemetriaCadaSegundo();
@@ -332,7 +332,7 @@ void Car_front(bool revisarObstaculo) {
     float d = checkdistance();
     if (d > 0 && d < OBSTACLE_STOP_CM) {
       Car_Stop();
-      Serial.println("{\"event\":\"OBSTACLE\",\"moving\":false}");
+      Serial.println("{\"event\":\"OBSTACLE\",\"moving\":false,\"move\":\"S\"}");
       return;
     }
   }
